@@ -1,0 +1,36 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven {
+            url 'http://192.168.2.199:8081/artifactory/list/gradle-release/'
+            credentials {
+                username MAVENUSER
+                password MAVENPASSWORD
+            }
+            //阿里云maven,解决google访问速度偏慢问题
+            maven { url 'https://maven.aliyun.com/repository/google' }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
