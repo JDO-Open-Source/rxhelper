@@ -1,6 +1,9 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
-public class UserInfo {
+import com.jidouauto.lib.middleware.Validator;
+import com.jidouauto.lib.middleware.exception.BaseException;
+
+public class UserInfo implements Validator {
     private String username;
     private int age;
 
@@ -26,5 +29,10 @@ public class UserInfo {
                 "username='" + username + '\'' +
                 ", age=" + age +
                 '}';
+    }
+
+    @Override
+    public void validateResult() throws BaseException {
+
     }
 }

@@ -3,17 +3,14 @@ package com.jidouauto.lib.middleware.transformer;
 import android.util.Log;
 
 import com.google.gson.JsonParseException;
-import com.jidouauto.lib.middleware.DataSource;
+import com.jidouauto.lib.middleware.DataConverter;
 import com.jidouauto.lib.middleware.IdentityValidator;
-import com.jidouauto.lib.middleware.ResultValidator;
+import com.jidouauto.lib.middleware.NullableData;
+import com.jidouauto.lib.middleware.Validator;
 import com.jidouauto.lib.middleware.exception.BaseException;
 import com.jidouauto.lib.middleware.exception.DataException;
 import com.jidouauto.lib.middleware.exception.NetworkException;
 import com.jidouauto.lib.middleware.exception.UnknowException;
-import com.jidouauto.lib.middleware.transformer.DataTransformer;
-import com.jidouauto.lib.middleware.transformer.IOUITransformer;
-import com.jidouauto.lib.middleware.transformer.IdentityTransformer;
-import com.jidouauto.lib.middleware.transformer.ResultTransformer;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -30,7 +27,7 @@ import retrofit2.HttpException;
 /**
  * @author eddie
  * <p>
- * 利用Rxjava2 Transformer接口，配合{@link DataSource},{@link IdentityValidator},{@link ResultValidator}
+ * 利用Rxjava2 Transformer接口，配合{@link DataConverter},{@link IdentityValidator},{@link Validator}
  * 来规范数据处理，进行数据校验，身份校验（Token），错误处理以及失败重试等操作
  */
 public class StreamTransformer {
@@ -67,19 +64,40 @@ public class StreamTransformer {
      * @param <T> 支持数据校验的数据模型必须实现DataValidator接口
      * @return observable transformer
      */
-    public static <T extends ResultValidator> ObservableTransformer<T, T> validateResult() {
-        return new ResultTransformer<>();
+    public static <T extends Validator> ObservableTransformer<T, T> validate() {
+        return new ValidateTransformer<>();
     }
 
     /**
-     * 将data从实现DataSource接口的数据中提取出来
+     * 如果传递下来的数据是NullableData类型，并且NullableData中的value类型为Validator的子类，并且该value不为null，那么则调用该value的validate方法。
+     * @param <T>
+     * @return
+     */
+    public static <T extends NullableData<? extends Validator>> ObservableTransformer<T, T> validateNullable() {
+        return new NullableDataValidateTransformer<>();
+    }
+
+
+    /**
+     * 将data从实现DataConverter接口的数据中提取出来
      *
      * @param <T> the type parameter
      * @param <R> the type parameter
      * @return observable transformer
      */
-    public static <T extends DataSource<R>, R> ObservableTransformer<T, R> convertToData() {
-        return new DataTransformer<>();
+    public static <T extends DataConverter<R>, R> ObservableTransformer<T, R> convertToData() {
+        return new DataConvertTransformer<>();
+    }
+
+    /**
+     * 将data从实现DataConverter接口的数据中提取出来，如果这个数据可能为空，那么可以提供一个默认值
+     * @param defaultValue data为空的情况返回该默认值
+     * @param <T>
+     * @param <R>
+     * @return
+     */
+    public static <T extends DataConverter<NullableData<R>>, R> ObservableTransformer<T, R> convertToData(R defaultValue) {
+        return new NullableDataConvertTransformer<>(defaultValue);
     }
 
     /**

@@ -19,8 +19,9 @@ public class LoginPresenter extends BasePresenter implements UserContract.ILogin
     @Override
     public void login(String username, String password) {
         mUserDataSource.login(username, password)
-                .compose(StreamTransformer.validateResult())       //验证数据正确性
+                .compose(StreamTransformer.validate())              //校验后端返回数据正确性
                 .compose(StreamTransformer.convertToData())         //数据转换
+                .compose(StreamTransformer.validate())              //校验转换后的数据的合法性
                 .compose(StreamTransformer.retryAnyError(1, 20)) //重试机制
                 .compose(StreamTransformer.convertError())            //将错误类型转换为可知的错误类型便于前台处理
                 .compose(StreamTransformer.applyIOUI())               //线程切换模式

@@ -1,10 +1,10 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
-import com.jidouauto.lib.middleware.DataSource;
+import com.jidouauto.lib.middleware.DataConverter;
 import com.jidouauto.lib.middleware.exception.BaseException;
 import com.jidouauto.lib.middleware.exception.DataException;
 
-public class ResultResp<T> extends MsgResp implements DataSource<T> {
+public class DataResp<T> extends MsgResp implements DataConverter<T> {
 
 
     public T data;
@@ -18,8 +18,13 @@ public class ResultResp<T> extends MsgResp implements DataSource<T> {
     }
 
     @Override
-    public void validateResult() throws BaseException {
-        super.validateResult();
+    public T convert() {
+        return getData();
+    }
+
+    @Override
+    public void validate() throws BaseException {
+        super.validate();
         if (data == null) {
             throw new DataException(getCode(), "Data is NULL!");
         }
@@ -27,7 +32,7 @@ public class ResultResp<T> extends MsgResp implements DataSource<T> {
 
     @Override
     public String toString() {
-        return "ResultResp{" +
+        return "DataResp{" +
                 "code=" + getCode() +
                 ",msg=" + getMessage() +
                 ",data=" + data +

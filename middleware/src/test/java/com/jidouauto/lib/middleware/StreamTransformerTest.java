@@ -1,18 +1,15 @@
 package com.jidouauto.lib.middleware;
 
+import com.jidouauto.lib.middleware.exception.BaseException;
 import com.jidouauto.lib.middleware.exception.DataException;
 import com.jidouauto.lib.middleware.exception.IdentityException;
 import com.jidouauto.lib.middleware.transformer.StreamTransformer;
 
-import org.junit.Test;
-
 import java.net.ConnectException;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.functions.Predicate;
 import io.reactivex.observers.TestObserver;
-import io.reactivex.subjects.ReplaySubject;
 
 /**
  * The type Stream transformer test.
@@ -27,7 +24,7 @@ public class StreamTransformerTest {
     /**
      * The type Test result.
      */
-    public class TestResult implements DataSource<String>, IdentityValidator, ResultValidator {
+    public class Test implements DataConverter<String>, IdentityValidator, Validator {
         /**
          * The M token.
          */
@@ -38,25 +35,25 @@ public class StreamTransformerTest {
          *
          * @param token the token
          */
-        public TestResult(int token) {
-            System.out.println("TestResult.TestResult");
+        public Test(int token) {
+            System.out.println("Test.Test");
             mToken = token;
         }
 
         @Override
-        public String getData() {
+        public String convert() {
             return "TEST";
         }
 
         @Override
-        public void validateResult() throws DataException {
-            System.out.println("TestResult.validateData");
+        public void validate() throws DataException {
+            System.out.println("Test.validateData");
         }
 
         @Override
         public void validateIdentity() throws IdentityException {
             if (mToken == 9) {
-                System.out.println("TestResult.validateIdentity token 错误");
+                System.out.println("Test.validateIdentity token 错误");
                 throw new IdentityException(9, "token 错误");
             }
         }
@@ -106,41 +103,94 @@ public class StreamTransformerTest {
      *
      * @throws InterruptedException the interrupted exception
      */
-    @Test
+    @org.junit.Test
     public void testTransformer() throws InterruptedException {
         //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
-        TestObserver<String> cto = new TestObserver<>();
-        Observable.just("A B C","E F","G H T")
-                .compose(StreamTransformer.applyIOUI())
-                .flatMap(str->Observable.fromArray(str.split(" ")))
-                .subscribe(s-> System.out.print(s));
 
-        ReplaySubject<String> replaySubject = ReplaySubject.create();
-        Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
-                emitter.onNext("1");
-                emitter.onNext("2");
-                emitter.onComplete();
+        TestObserver<String> testObserver = new TestObserver<>();
+        Observable.fromCallable(() -> new Test(getToken()))
+                .compose(StreamTransformer.validateIdentity())   //验证身份错误
+                .compose(StreamTransformer.validate())       //验证数据正确性
+                .compose(StreamTransformer.convertToData())           //数据转换
+                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 0, refreshToken(1)))
+                .compose(StreamTransformer.retryExceptError(3, 0, IdentityException.class))
+                .compose(StreamTransformer.convertError())
+                .subscribe(testObserver);
+        testObserver.assertValue("TEST");
+    }
+
+
+    class User implements Validator {
+        String username;
+        String passwd;
+
+        @Override
+        public void validate() throws BaseException {
+            if (username == null) {
+                throw new DataException(-1, "");
             }
-        }).subscribe(replaySubject);
+        }
+    }
 
-        replaySubject.subscribe(s-> System.out.println(s));
-        replaySubject.subscribe(s-> System.out.println(s));
-        replaySubject.getValue();
-        replaySubject.cleanupBuffer();
-        Thread.sleep(1000);
-        replaySubject.subscribe(s-> System.out.println(s));
+    class NullableResult<T> implements Validator, DataConverter<NullableData<T>> {
 
-//        TestObserver<String> testObserver = new TestObserver<>();
-//        Observable.defer((Callable<ObservableSource<TestResult>>) () -> Observable.just(new TestResult(getToken())))
-//                .compose(StreamTransformer.validateIdentity())   //验证身份错误
-//                .compose(StreamTransformer.validateResult())       //验证数据正确性
-//                .compose(StreamTransformer.convertToData())           //数据转换
-//                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 0, refreshToken(9)))
-//                .compose(StreamTransformer.retryExceptError(3, 0, IdentityException.class))
-//                .compose(StreamTransformer.convertError())
-//                .subscribe(testObserver);
-//        testObserver.assertValue("TEST");
+        T data;
+
+        @Override
+        public NullableData<T> convert() {
+            return NullableData.of(data);
+        }
+
+        @Override
+        public void validate() throws BaseException {
+            //skip
+        }
+    }
+
+    @org.junit.Test
+    public void testValidateNullable() {
+        User user = new User();
+        NullableResult<User> result = new NullableResult();
+        result.data = user;
+
+        TestObserver testObserver = new TestObserver();
+
+        Observable.just(result)
+                .compose(StreamTransformer.validate())
+                .compose(StreamTransformer.convertToData())
+                .compose(StreamTransformer.validateNullable())
+                .subscribe(testObserver);
+
+        testObserver.assertError(DataException.class);
+
+        user.username = "zhangsan";
+
+        TestObserver testObserver2 = new TestObserver();
+
+        Observable.just(result)
+                .compose(StreamTransformer.validate())
+                .compose(StreamTransformer.convertToData())
+                .compose(StreamTransformer.validateNullable())
+                .subscribe(testObserver2);
+
+        testObserver2.assertValueCount(1);
+
+        result.data = null;
+
+        TestObserver testObserver3 = new TestObserver();
+
+        Observable.just(result)
+                .compose(StreamTransformer.validate())
+                .compose(StreamTransformer.convertToData())
+                .compose(StreamTransformer.validateNullable())
+                .subscribe(testObserver3);
+
+        testObserver3.assertValueCount(1);
+        testObserver3.assertValue(new Predicate() {
+            @Override
+            public boolean test(Object o) throws Exception {
+                return o instanceof NullableData && ((NullableData<User>) o).isNull();
+            }
+        });
     }
 }

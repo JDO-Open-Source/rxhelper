@@ -1,6 +1,7 @@
 package com.jidouauto.lib.middleware.transformer;
 
-import com.jidouauto.lib.middleware.ResultValidator;
+import com.jidouauto.lib.middleware.NullableData;
+import com.jidouauto.lib.middleware.Validator;
 
 import org.reactivestreams.Publisher;
 
@@ -16,7 +17,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
 
-class ResultTransformer<T extends ResultValidator> implements ObservableTransformer<T, T>,
+class NullableDataValidateTransformer<T extends NullableData<? extends Validator>> implements ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T> {
@@ -25,7 +26,9 @@ class ResultTransformer<T extends ResultValidator> implements ObservableTransfor
     public Publisher<T> apply(Flowable<T> upstream) {
         return upstream
                 .map(resp -> {
-                    resp.validateResult();
+                    if (resp.isNotNull()) {
+                        resp.get().validate();
+                    }
                     return resp;
                 });
     }
@@ -34,7 +37,9 @@ class ResultTransformer<T extends ResultValidator> implements ObservableTransfor
     public MaybeSource<T> apply(Maybe<T> upstream) {
         return upstream
                 .map(resp -> {
-                    resp.validateResult();
+                    if (resp.isNotNull()) {
+                        resp.get().validate();
+                    }
                     return resp;
                 });
     }
@@ -43,7 +48,9 @@ class ResultTransformer<T extends ResultValidator> implements ObservableTransfor
     public ObservableSource<T> apply(Observable<T> upstream) {
         return upstream
                 .map(resp -> {
-                    resp.validateResult();
+                    if (resp.isNotNull()) {
+                        resp.get().validate();
+                    }
                     return resp;
                 });
     }
@@ -52,7 +59,9 @@ class ResultTransformer<T extends ResultValidator> implements ObservableTransfor
     public SingleSource<T> apply(Single<T> upstream) {
         return upstream
                 .map(resp -> {
-                    resp.validateResult();
+                    if (resp.isNotNull()) {
+                        resp.get().validate();
+                    }
                     return resp;
                 });
     }

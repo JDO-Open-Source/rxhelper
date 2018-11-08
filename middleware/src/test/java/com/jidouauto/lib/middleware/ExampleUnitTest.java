@@ -2,6 +2,11 @@ package com.jidouauto.lib.middleware;
 
 import org.junit.Test;
 
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+
 import static org.junit.Assert.*;
 
 /**
@@ -16,5 +21,45 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
+    }
+
+    @Test
+    public void testMaybe(){
+        Maybe.just(null)
+                .subscribe(o->{
+                    System.out.println("ExampleUnitTest.testMaybe:"+o);
+                });
+    }
+
+    @Test
+    public void testCreate() {
+        Observable
+                .create(new ObservableOnSubscribe<Integer>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                        emitter.onNext(1);
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        emitter.onError(new NullPointerException("s"));
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        emitter.onNext(3);
+                        emitter.onComplete();
+                    }
+                })
+                .onErrorReturnItem(2)
+                .subscribe(integer -> System.out.println(integer),e->e.printStackTrace(),()-> System.out.println("complete!"));
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

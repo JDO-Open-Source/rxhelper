@@ -52,6 +52,26 @@ public class UserActivity extends BaseActivity implements UserContract.IUserView
     }
 
     @Override
+    public void startGetUserAvatar() {
+        getLoadingView().showLoading("GetUserAvatar", getString(R.string.loading_avatar));
+    }
+
+    @Override
+    public void endGetUserAvatar() {
+        getLoadingView().cancel("GetUserAvatar");
+    }
+
+    @Override
+    public void onUserAvatar(String avatar) {
+        //设置用户头像
+    }
+
+    @Override
+    public void getUserAvatarError(Throwable e) {
+        //加载头像出错处理
+    }
+
+    @Override
     public void setPresenter(UserContract.IUserPresenter presenter) {
         userPresenter = presenter;
     }

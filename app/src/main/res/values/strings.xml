@@ -8,4 +8,5 @@
     <string name="get_user_info_failed">获取用户信息失败！</string>
     <string name="network_error">网络错误</string>
     <string name="getting_user_info">正在获取用户信息</string>
+    <string name="loading_avatar">正在加载头像</string>
 </resources>

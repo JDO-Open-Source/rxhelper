@@ -1,6 +1,6 @@
 package com.jidouauto.lib.middleware.transformer;
 
-import com.jidouauto.lib.middleware.DataSource;
+import com.jidouauto.lib.middleware.DataConverter;
 
 import org.reactivestreams.Publisher;
 
@@ -16,7 +16,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
 
-class DataTransformer<T extends DataSource<R>, R> implements ObservableTransformer<T, R>,
+class DataConvertTransformer<T extends DataConverter<R>, R> implements ObservableTransformer<T, R>,
         FlowableTransformer<T, R>,
         SingleTransformer<T, R>,
         MaybeTransformer<T, R> {
@@ -24,24 +24,24 @@ class DataTransformer<T extends DataSource<R>, R> implements ObservableTransform
     @Override
     public Publisher<R> apply(Flowable<T> upstream) {
         return upstream
-                .map(resp -> resp.getData());
+                .map(resp -> resp.convert());
     }
 
     @Override
     public MaybeSource<R> apply(Maybe<T> upstream) {
         return upstream
-                .map(resp -> resp.getData());
+                .map(resp -> resp.convert());
     }
 
     @Override
     public ObservableSource<R> apply(Observable<T> upstream) {
         return upstream
-                .map(resp -> resp.getData());
+                .map(resp -> resp.convert());
     }
 
     @Override
     public SingleSource<R> apply(Single<T> upstream) {
         return upstream
-                .map(resp -> resp.getData());
+                .map(resp -> resp.convert());
     }
 }

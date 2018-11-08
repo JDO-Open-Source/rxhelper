@@ -2,18 +2,21 @@ package com.jidouauto.eddie.mvpdemo.data.user;
 
 import android.util.Log;
 
+import com.jidouauto.eddie.mvpdemo.bean.DataResp;
 import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
-import com.jidouauto.eddie.mvpdemo.bean.ResultResp;
+import com.jidouauto.eddie.mvpdemo.bean.NullableDataResp;
 import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 
 import java.util.UUID;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 
 public class UserDataSourceImpl implements UserDataSource {
     private static final String TAG = "UserDataSourceImpl";
 
-    public Observable<ResultResp<LoginInfo>> login(String username, final String password) {
+    public Observable<DataResp<LoginInfo>> login(String username, final String password) {
         Log.d(TAG, "login : " + username);
         //配合Retrofit+Rxjava2 返回数据
         ///模拟服务端返回数据
@@ -21,32 +24,32 @@ public class UserDataSourceImpl implements UserDataSource {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    ResultResp<LoginInfo> dataResp = new ResultResp();
+                    DataResp<LoginInfo> dataDataResp = new DataResp();
                     if ("zhangsan".equals(username)) {
                         if ("123".equals(password)) {
                             LoginInfo loginInfo = new LoginInfo();
                             loginInfo.setUsername(username);
                             loginInfo.setToken("tokenfortest");
-                            dataResp.setData(loginInfo);
-                            dataResp.setCode(1);
+                            dataDataResp.setData(loginInfo);
+                            dataDataResp.setCode(1);
                         } else {
-                            dataResp.setCode(0);
-                            dataResp.setMessage("密码不正确!");
+                            dataDataResp.setCode(0);
+                            dataDataResp.setMessage("密码不正确!");
                         }
                     } else if ("datanull".equals(username)) {
-                        dataResp.setCode(1);
-                        dataResp.setData(null);
+                        dataDataResp.setCode(1);
+                        dataDataResp.setData(null);
                     } else if ("messagenull".equals(username)) {
-                        dataResp.setCode(0);
-                        dataResp.setMessage(null);
+                        dataDataResp.setCode(0);
+                        dataDataResp.setMessage(null);
                     } else if ("token".equals(username)) {
-                        dataResp.setCode(999);
-                        dataResp.setMessage("Token 失效");
+                        dataDataResp.setCode(999);
+                        dataDataResp.setMessage("Token 失效");
                     } else {
-                        dataResp.setCode(0);
-                        dataResp.setMessage("用户不存在!");
+                        dataDataResp.setCode(0);
+                        dataDataResp.setMessage("用户不存在!");
                     }
-                    emitter.onNext(dataResp);
+                    emitter.onNext(dataDataResp);
                     emitter.onComplete();
                 }
             }).start();
@@ -54,7 +57,7 @@ public class UserDataSourceImpl implements UserDataSource {
     }
 
     @Override
-    public Observable<ResultResp<String>> getToken() {
+    public Observable<DataResp<String>> getToken() {
         //配合Retrofit+Rxjava2 返回数据
         ///模拟服务端返回数据
 
@@ -67,7 +70,7 @@ public class UserDataSourceImpl implements UserDataSource {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    ResultResp<String> tokenData = new ResultResp<>();
+                    DataResp<String> tokenData = new DataResp<>();
                     tokenData.setCode(1);
                     Log.d(TAG, "fetch token : " + serverToken);
                     localToken = serverToken;
@@ -94,7 +97,7 @@ public class UserDataSourceImpl implements UserDataSource {
     }
 
     @Override
-    public Observable<ResultResp<UserInfo>> getUserInfo(String token) {
+    public Observable<DataResp<UserInfo>> getUserInfo(String token) {
         return Observable.create(emitter -> {
             new Thread(() -> {
                 try {
@@ -102,20 +105,40 @@ public class UserDataSourceImpl implements UserDataSource {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                ResultResp<UserInfo> resultResp = new ResultResp<>();
+                DataResp<UserInfo> resultDataResp = new DataResp<>();
                 if (!serverToken.equals(token)) {
-                    resultResp.setCode(999);
-                    resultResp.setMessage("Token expire!");
+                    resultDataResp.setCode(999);
+                    resultDataResp.setMessage("Token expire!");
                 } else {
                     UserInfo userInfo = new UserInfo();
                     userInfo.setUsername("zhangsan");
                     userInfo.setAge(18);
-                    resultResp.setCode(1);
-                    resultResp.setData(userInfo);
+                    resultDataResp.setCode(1);
+                    resultDataResp.setData(userInfo);
                 }
-                emitter.onNext(resultResp);
+                emitter.onNext(resultDataResp);
                 emitter.onComplete();
             }).start();
+        });
+    }
+
+    @Override
+    public Observable<NullableDataResp<String>> getUserAvatar(String token) {
+        return Observable.create(new ObservableOnSubscribe<NullableDataResp<String>>() {
+            @Override
+            public void subscribe(ObservableEmitter<NullableDataResp<String>> emitter) throws Exception {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String avatar = null;
+
+                        NullableDataResp<String> resp = new NullableDataResp<>();
+                        resp.setData(avatar);
+                        emitter.onNext(resp);
+                        emitter.onComplete();
+                    }
+                }).start();
+            }
         });
     }
 }

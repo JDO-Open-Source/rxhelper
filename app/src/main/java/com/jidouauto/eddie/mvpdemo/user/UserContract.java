@@ -28,9 +28,19 @@ public class UserContract {
         void onGetUserInfoFailed(Throwable e);
 
         void onUserInfo(UserInfo userInfo);
+
+        void startGetUserAvatar();
+
+        void onUserAvatar(String avatar);
+
+        void getUserAvatarError(Throwable e);
+
+        void endGetUserAvatar();
     }
 
     public interface IUserPresenter extends IBasePresenter {
         void getUserInfo();
+
+        void getUserAvatar();
     }
 }
