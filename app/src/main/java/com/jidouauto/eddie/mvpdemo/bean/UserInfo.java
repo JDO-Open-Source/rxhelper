@@ -1,7 +1,9 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
+import com.jidouauto.lib.base.utils.StringUtils;
 import com.jidouauto.lib.middleware.Validator;
 import com.jidouauto.lib.middleware.exception.BaseException;
+import com.jidouauto.lib.middleware.exception.DataException;
 
 public class UserInfo implements Validator {
     private String username;
@@ -32,7 +34,9 @@ public class UserInfo implements Validator {
     }
 
     @Override
-    public void validateResult() throws BaseException {
-
+    public void validate() throws BaseException {
+        if (StringUtils.isEmpty(username)) {
+            throw new DataException(-1, "username is empty!");
+        }
     }
 }

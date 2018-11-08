@@ -8,8 +8,10 @@ import com.jidouauto.lib.middleware.transformer.StreamTransformer;
 import java.net.ConnectException;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * The type Stream transformer test.
@@ -63,7 +65,7 @@ public class StreamTransformerTest {
      * The Error.
      */
 //模拟第一次从服务端刷新token失败，但第二次正常的逻辑
-    boolean error = true;
+    boolean error = false;
 
     /**
      * Refresh token observable.
@@ -71,8 +73,8 @@ public class StreamTransformerTest {
      * @param newToken the new token
      * @return the observable
      */
-    public Observable<Integer> refreshToken(int newToken) {
-        return Observable.just(newToken)
+    public Single<Integer> refreshToken(int newToken) {
+        return Single.just(newToken)
                 .map(i -> {
                     if (error) {
                         error = false;
@@ -112,13 +114,15 @@ public class StreamTransformerTest {
                 .compose(StreamTransformer.validateIdentity())   //验证身份错误
                 .compose(StreamTransformer.validate())       //验证数据正确性
                 .compose(StreamTransformer.convertToData())           //数据转换
-                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 0, refreshToken(1)))
+                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 1000, refreshToken(1)))
                 .compose(StreamTransformer.retryExceptError(3, 0, IdentityException.class))
-                .compose(StreamTransformer.convertError())
                 .subscribe(testObserver);
+//        testObserver.assertValue("TEST");
+
+        Thread.sleep(10000);
+
         testObserver.assertValue("TEST");
     }
-
 
     class User implements Validator {
         String username;

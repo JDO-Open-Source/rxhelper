@@ -2,27 +2,21 @@ package com.jidouauto.lib.middleware.transformer;
 
 import android.util.Log;
 
-import com.google.gson.JsonParseException;
 import com.jidouauto.lib.middleware.DataConverter;
+import com.jidouauto.lib.middleware.ErrorConverter;
 import com.jidouauto.lib.middleware.IdentityValidator;
 import com.jidouauto.lib.middleware.NullableData;
+import com.jidouauto.lib.middleware.RetryOnError;
 import com.jidouauto.lib.middleware.Validator;
-import com.jidouauto.lib.middleware.exception.BaseException;
-import com.jidouauto.lib.middleware.exception.DataException;
-import com.jidouauto.lib.middleware.exception.NetworkException;
-import com.jidouauto.lib.middleware.exception.UnknowException;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.reactivex.functions.Function;
-import retrofit2.HttpException;
 
 /**
  * @author eddie
@@ -31,12 +25,6 @@ import retrofit2.HttpException;
  * 来规范数据处理，进行数据校验，身份校验（Token），错误处理以及失败重试等操作
  */
 public class StreamTransformer {
-
-    private static final String TAG = "StreamTransformer";
-    /**
-     * The constant debug.
-     */
-    public static boolean debug = false;
 
     /**
      * 经典的IO-UI的线程切换模型
@@ -64,12 +52,13 @@ public class StreamTransformer {
      * @param <T> 支持数据校验的数据模型必须实现DataValidator接口
      * @return observable transformer
      */
-    public static <T extends Validator> ObservableTransformer<T, T> validate() {
+    public static <T extends Validator> ValidateTransformer<T> validate() {
         return new ValidateTransformer<>();
     }
 
     /**
      * 如果传递下来的数据是NullableData类型，并且NullableData中的value类型为Validator的子类，并且该value不为null，那么则调用该value的validate方法。
+     *
      * @param <T>
      * @return
      */
@@ -85,54 +74,20 @@ public class StreamTransformer {
      * @param <R> the type parameter
      * @return observable transformer
      */
-    public static <T extends DataConverter<R>, R> ObservableTransformer<T, R> convertToData() {
+    public static <T extends DataConverter<R>, R> DataConvertTransformer<T, R> convertToData() {
         return new DataConvertTransformer<>();
     }
 
     /**
      * 将data从实现DataConverter接口的数据中提取出来，如果这个数据可能为空，那么可以提供一个默认值
+     *
      * @param defaultValue data为空的情况返回该默认值
      * @param <T>
      * @param <R>
      * @return
      */
-    public static <T extends DataConverter<NullableData<R>>, R> ObservableTransformer<T, R> convertToData(R defaultValue) {
+    public static <T extends DataConverter<NullableData<R>>, R> NullableDataConvertTransformer<T, R> convertToData(R defaultValue) {
         return new NullableDataConvertTransformer<>(defaultValue);
-    }
-
-    /**
-     * 自定义错误类型转换接口
-     */
-    public interface ErrorConverter {
-        /**
-         * Convert base exception.
-         *
-         * @param e the e
-         * @return the base exception
-         */
-        BaseException convert(Throwable e);
-    }
-
-    /**
-     * 将某个错误类型转换成特定的错误类型方便统一处理
-     *
-     * @param e 错误类型
-     * @return base exception
-     */
-    public static BaseException convert(Throwable e) {
-        if (e instanceof UnknownHostException
-                || e instanceof ConnectException
-                || e instanceof SocketTimeoutException
-                || e instanceof HttpException
-                || e instanceof IOException) {
-            return new NetworkException(-1, e);
-        } else if (e instanceof JsonParseException) {
-            return new DataException(-1, e);
-        } else if (e instanceof BaseException) {
-            return (BaseException) e;
-        } else {
-            return new UnknowException(UnknowException.UNKNOW_CODE, e);
-        }
     }
 
     /**
@@ -142,34 +97,8 @@ public class StreamTransformer {
      * @param errorConverter the error converter
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> convertError(ErrorConverter errorConverter) {
-        return upstream -> upstream
-                .onErrorResumeNext((Function<Throwable, ObservableSource<? extends T>>) e -> {
-                    return Observable.error(errorConverter.convert(e));
-                });
-    }
-
-    /**
-     * 通用异常转换
-     *
-     * @param <T> the type parameter
-     * @return observable transformer
-     */
-    public static <T> ObservableTransformer<T, T> convertError() {
-        return convertError(e -> convert(e));
-    }
-
-    /**
-     * The interface Retry on error.
-     */
-    public interface RetryOnError {
-        /**
-         * 根据错误类型判断是否应该重试
-         *
-         * @param throwable the throwable
-         * @return 是否重试 boolean
-         */
-        boolean isRetry(Throwable throwable);
+    public static <T> ConvertErrorTransformer<T> convertError(ErrorConverter errorConverter) {
+        return new ConvertErrorTransformer<>(errorConverter);
     }
 
     /**
@@ -182,43 +111,8 @@ public class StreamTransformer {
      * @param retryAfter       重试前执行的操作
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, ObservableSource<?> retryAfter) {
-        return upstream -> upstream
-                .retryWhen(new Function<Observable<Throwable>, ObservableSource<?>>() {
-                    int currentRetry;
-
-                    @Override
-                    public ObservableSource<?> apply(Observable<Throwable> throwableObservable) {
-                        return throwableObservable.flatMap(throwable -> {
-                            if (retryOnError.isRetry(throwable)) {
-                                if (debug) {
-                                    Log.d(TAG, "retry on :" + throwable.getClass().getSimpleName() + ":" + throwable.getMessage());
-                                }
-                                //重试，最多重试retryCount次
-                                if (currentRetry < retryCount) {
-                                    currentRetry++;
-                                    //尝试自动登陆
-                                    if (debug) {
-                                        Log.d(TAG, "第" + currentRetry + "次重试");
-                                    }
-                                    Observable retryObservable = delayMillisecond > 0 ? Observable.timer(delayMillisecond, TimeUnit.MILLISECONDS) : Observable.just(1);
-                                    if (retryAfter == null) {
-                                        if (debug) {
-                                            Log.d(TAG, "retry after:" + delayMillisecond);
-                                        }
-                                        return retryObservable;
-                                    } else {
-                                        if (debug) {
-                                            Log.d(TAG, "retryAfter after:" + delayMillisecond);
-                                        }
-                                        return retryObservable.flatMap(i -> retryAfter);
-                                    }
-                                }
-                            }
-                            return Observable.error(throwable);
-                        });
-                    }
-                });
+    public static <T> RetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, Single<?> retryAfter) {
+        return new RetryWhenTransformer<>(retryOnError,retryCount,delayMillisecond,retryAfter);
     }
 
     /**
@@ -229,7 +123,7 @@ public class StreamTransformer {
      * @param delayMillisecond 每次重试延迟
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> retryAnyError(final int retryCount, long delayMillisecond) {
+    public static <T> RetryWhenTransformer<T> retryAnyError(final int retryCount, long delayMillisecond) {
         return retryWhenError(throwable -> true, retryCount, delayMillisecond, null);
     }
 
@@ -242,7 +136,7 @@ public class StreamTransformer {
      * @param errorClasses     如果错误类型包含在errorClasses才重试
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> retryOnError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
+    public static <T> RetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
         return retryWhenError(throwable -> {
             if (errorClasses == null) {
                 return false;
@@ -267,7 +161,7 @@ public class StreamTransformer {
      * @param errorClasses     如果错误类型包含在errorClasses则不重试
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> retryExceptError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
+    public static <T> RetryWhenTransformer<T> retryExceptError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
         return retryWhenError(throwable -> {
             if (errorClasses == null) {
                 return true;
@@ -294,7 +188,7 @@ public class StreamTransformer {
      * @param retryAfter       重试前执行的逻辑
      * @return observable transformer
      */
-    public static <T> ObservableTransformer<T, T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter) {
+    public static <T> RetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, Single<?> retryAfter) {
         return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
     }
 }

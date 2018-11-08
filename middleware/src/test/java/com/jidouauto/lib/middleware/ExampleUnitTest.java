@@ -3,6 +3,8 @@ package com.jidouauto.lib.middleware;
 import org.junit.Test;
 
 import io.reactivex.Maybe;
+import io.reactivex.MaybeEmitter;
+import io.reactivex.MaybeOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -24,11 +26,17 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void testMaybe(){
-        Maybe.just(null)
-                .subscribe(o->{
-                    System.out.println("ExampleUnitTest.testMaybe:"+o);
-                });
+    public void testMaybe() {
+        Maybe.create(new MaybeOnSubscribe<Object>() {
+            @Override
+            public void subscribe(MaybeEmitter<Object> emitter) throws Exception {
+                emitter.onSuccess("1");
+                emitter.onComplete();
+            }
+        })
+                .subscribe(o -> {
+                    System.out.println("ExampleUnitTest.testMaybe:" + o);
+                }, e -> e.printStackTrace(), () -> System.out.println("ExampleUnitTest.testMaybe.success"));
     }
 
     @Test
@@ -54,7 +62,7 @@ public class ExampleUnitTest {
                     }
                 })
                 .onErrorReturnItem(2)
-                .subscribe(integer -> System.out.println(integer),e->e.printStackTrace(),()-> System.out.println("complete!"));
+                .subscribe(integer -> System.out.println(integer), e -> e.printStackTrace(), () -> System.out.println("complete!"));
 
         try {
             Thread.sleep(5000);

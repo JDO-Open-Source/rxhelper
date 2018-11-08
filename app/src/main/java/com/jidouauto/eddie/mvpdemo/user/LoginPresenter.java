@@ -3,6 +3,7 @@ package com.jidouauto.eddie.mvpdemo.user;
 import com.jidouauto.eddie.mvpdemo.BasePresenter;
 import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
+import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
 import com.jidouauto.lib.middleware.transformer.StreamTransformer;
 
 public class LoginPresenter extends BasePresenter implements UserContract.ILoginPresenter {
@@ -23,7 +24,7 @@ public class LoginPresenter extends BasePresenter implements UserContract.ILogin
                 .compose(StreamTransformer.convertToData())         //数据转换
                 .compose(StreamTransformer.validate())              //校验转换后的数据的合法性
                 .compose(StreamTransformer.retryAnyError(1, 20)) //重试机制
-                .compose(StreamTransformer.convertError())            //将错误类型转换为可知的错误类型便于前台处理
+                .compose(StreamTransformer.convertError(BasicErrorConverter.INSTANCE))            //将错误类型转换为可知的错误类型便于前台处理
                 .compose(StreamTransformer.applyIOUI())               //线程切换模式
                 .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))   //ON_DESTROY事件的时候取消订阅事件
                 .doOnSubscribe(disposable1 -> {

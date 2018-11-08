@@ -5,12 +5,13 @@ import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
 import com.jidouauto.eddie.mvpdemo.bean.NullableDataResp;
 import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 public interface UserDataSource {
-    Observable<DataResp<LoginInfo>> login(String username, String password);
+    Single<DataResp<LoginInfo>> login(String username, String password);
 
-    Observable<DataResp<String>> getToken();
+    Single<DataResp<String>> getToken();
 
     void expireToken();
 
@@ -20,7 +21,7 @@ public interface UserDataSource {
      * @param token
      * @return
      */
-    Observable<DataResp<UserInfo>> getUserInfo(String token);
+    Single<DataResp<UserInfo>> getUserInfo(String token);
 
     /**
      * 获取用户头像链接地址
@@ -29,7 +30,7 @@ public interface UserDataSource {
      * @param token
      * @return
      */
-    Observable<NullableDataResp<String>> getUserAvatar(String token);
+    Single<NullableDataResp<String>> getUserAvatar(String token);
 
     String getLocalToken();
 }

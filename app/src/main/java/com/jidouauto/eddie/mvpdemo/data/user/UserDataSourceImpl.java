@@ -9,18 +9,19 @@ import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 
 import java.util.UUID;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleSource;
 
 public class UserDataSourceImpl implements UserDataSource {
     private static final String TAG = "UserDataSourceImpl";
 
-    public Observable<DataResp<LoginInfo>> login(String username, final String password) {
+    public Single<DataResp<LoginInfo>> login(String username, final String password) {
         Log.d(TAG, "login : " + username);
         //配合Retrofit+Rxjava2 返回数据
         ///模拟服务端返回数据
-        return Observable.create(emitter -> {
+        return Single.create(emitter -> {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -49,19 +50,18 @@ public class UserDataSourceImpl implements UserDataSource {
                         dataDataResp.setCode(0);
                         dataDataResp.setMessage("用户不存在!");
                     }
-                    emitter.onNext(dataDataResp);
-                    emitter.onComplete();
+                    emitter.onSuccess(dataDataResp);
                 }
             }).start();
         });
     }
 
     @Override
-    public Observable<DataResp<String>> getToken() {
+    public Single<DataResp<String>> getToken() {
         //配合Retrofit+Rxjava2 返回数据
         ///模拟服务端返回数据
 
-        return Observable.create(emitter -> {
+        return Single.create(emitter -> {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -76,8 +76,7 @@ public class UserDataSourceImpl implements UserDataSource {
                     localToken = serverToken;
                     tokenData.setData(localToken);
                     tokenData.setCode(1);
-                    emitter.onNext(tokenData);
-                    emitter.onComplete();
+                    emitter.onSuccess(tokenData);
                 }
             }).start();
         });
@@ -97,8 +96,8 @@ public class UserDataSourceImpl implements UserDataSource {
     }
 
     @Override
-    public Observable<DataResp<UserInfo>> getUserInfo(String token) {
-        return Observable.create(emitter -> {
+    public Single<DataResp<UserInfo>> getUserInfo(String token) {
+        return Single.create(emitter -> {
             new Thread(() -> {
                 try {
                     Thread.sleep(2000);
@@ -116,17 +115,16 @@ public class UserDataSourceImpl implements UserDataSource {
                     resultDataResp.setCode(1);
                     resultDataResp.setData(userInfo);
                 }
-                emitter.onNext(resultDataResp);
-                emitter.onComplete();
+                emitter.onSuccess(resultDataResp);
             }).start();
         });
     }
 
     @Override
-    public Observable<NullableDataResp<String>> getUserAvatar(String token) {
-        return Observable.create(new ObservableOnSubscribe<NullableDataResp<String>>() {
+    public Single<NullableDataResp<String>> getUserAvatar(String token) {
+        return Single.create(new SingleOnSubscribe<NullableDataResp<String>>() {
             @Override
-            public void subscribe(ObservableEmitter<NullableDataResp<String>> emitter) throws Exception {
+            public void subscribe(SingleEmitter<NullableDataResp<String>> emitter) throws Exception {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -134,8 +132,7 @@ public class UserDataSourceImpl implements UserDataSource {
 
                         NullableDataResp<String> resp = new NullableDataResp<>();
                         resp.setData(avatar);
-                        emitter.onNext(resp);
-                        emitter.onComplete();
+                        emitter.onSuccess(resp);
                     }
                 }).start();
             }
