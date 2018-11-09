@@ -21,9 +21,9 @@ class ConvertErrorTransformer<T> implements ObservableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T> {
 
-    private ErrorConverter errorConverter;
+    private ErrorConverter<? extends Exception> errorConverter;
 
-    public ConvertErrorTransformer(ErrorConverter errorConverter) {
+    public ConvertErrorTransformer(ErrorConverter<? extends Exception> errorConverter) {
         this.errorConverter = errorConverter;
     }
 

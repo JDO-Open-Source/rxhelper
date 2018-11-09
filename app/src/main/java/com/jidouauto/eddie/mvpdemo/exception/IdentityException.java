@@ -1,4 +1,4 @@
-package com.jidouauto.lib.middleware.exception;
+package com.jidouauto.eddie.mvpdemo.exception;
 
 /**
  * The type Identity exception.

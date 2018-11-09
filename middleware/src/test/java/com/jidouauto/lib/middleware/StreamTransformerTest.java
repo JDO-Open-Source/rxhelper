@@ -1,16 +1,19 @@
 package com.jidouauto.lib.middleware;
 
-import com.jidouauto.lib.middleware.exception.BaseException;
-import com.jidouauto.lib.middleware.exception.DataException;
-import com.jidouauto.lib.middleware.exception.IdentityException;
 import com.jidouauto.lib.middleware.transformer.StreamTransformer;
 
+import org.junit.Assert;
+import org.junit.Before;
+
 import java.net.ConnectException;
+import java.util.concurrent.Future;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.android.plugins.RxAndroidPlugins;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -26,7 +29,7 @@ public class StreamTransformerTest {
     /**
      * The type Test result.
      */
-    public class Test implements DataConverter<String>, IdentityValidator, Validator {
+    public class Test implements DataConverter<String>, Validator<BaseException> {
         /**
          * The M token.
          */
@@ -48,15 +51,11 @@ public class StreamTransformerTest {
         }
 
         @Override
-        public void validate() throws DataException {
+        public void validate() throws BaseException {
             System.out.println("Test.validateData");
-        }
-
-        @Override
-        public void validateIdentity() throws IdentityException {
             if (mToken == 9) {
                 System.out.println("Test.validateIdentity token 错误");
-                throw new IdentityException(9, "token 错误");
+                throw new IdentityException("token 错误");
             }
         }
     }
@@ -101,27 +100,38 @@ public class StreamTransformerTest {
     }
 
     /**
+     * 把异步变成同步，方便测试
+     */
+    @Before
+    public void setSchedulerBefore() {
+        // reset()不是必要，实践中发现不写reset()，偶尔会出错，所以写上保险^_^
+//        RxJavaPlugins.reset();
+//        RxJavaPlugins.setComputationSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
+//        RxJavaPlugins.setIoSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
+//        RxJavaPlugins.setNewThreadSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
+//        RxJavaPlugins.setSingleSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
+//        RxAndroidPlugins.reset();
+//        RxAndroidPlugins.setMainThreadSchedulerHandler(scheduler -> Schedulers.trampoline());
+    }
+
+    /**
      * Test transformer.
      *
      * @throws InterruptedException the interrupted exception
      */
     @org.junit.Test
-    public void testTransformer() throws InterruptedException {
+    public void testTransformer() throws Exception {
         //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
-
         TestObserver<String> testObserver = new TestObserver<>();
         Observable.fromCallable(() -> new Test(getToken()))
-                .compose(StreamTransformer.validateIdentity())   //验证身份错误
                 .compose(StreamTransformer.validate())       //验证数据正确性
                 .compose(StreamTransformer.convertToData())           //数据转换
-                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 1000, refreshToken(1)))
+                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 200, refreshToken(1)))
                 .compose(StreamTransformer.retryExceptError(3, 0, IdentityException.class))
                 .subscribe(testObserver);
-//        testObserver.assertValue("TEST");
-
-        Thread.sleep(10000);
-
+        testObserver.awaitTerminalEvent();
         testObserver.assertValue("TEST");
+//        Assert.assertEquals("TEST", result.get());
     }
 
     class User implements Validator {
@@ -131,7 +141,7 @@ public class StreamTransformerTest {
         @Override
         public void validate() throws BaseException {
             if (username == null) {
-                throw new DataException(-1, "");
+                throw new DataException("user name null");
             }
         }
     }

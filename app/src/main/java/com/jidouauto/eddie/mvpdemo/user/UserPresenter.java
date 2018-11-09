@@ -5,7 +5,7 @@ import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
 import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
 import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
-import com.jidouauto.lib.middleware.exception.IdentityException;
+import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
 import com.jidouauto.lib.middleware.transformer.StreamTransformer;
 
 import io.reactivex.Single;
@@ -21,7 +21,6 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
         mUserView = userView;
         userView.setPresenter(this);
         mUserDataSource = userDataSource;
-        StreamTransformer.debug = true;
     }
 
     @Override

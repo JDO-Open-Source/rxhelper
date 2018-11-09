@@ -44,23 +44,20 @@ class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
         return new Function<Flowable<Throwable>, Publisher<?>>() {
             @Override
             public Publisher<?> apply(Flowable<Throwable> throwableFlowable) throws Exception {
-                return throwableFlowable.flatMap(new Function<Throwable, Publisher<?>>() {
-                    @Override
-                    public Publisher<?> apply(Throwable throwable) throws Exception {
-                        if (mRetryOnError.isRetry(throwable)) {
-                            //重试，最多重试retryCount次
-                            if (currentRetry < mRetryCount) {
-                                currentRetry++;
-                                //尝试自动登陆
-                                if (mRetryAfter == null) {
-                                    return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
-                                } else {
-                                    return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> mRetryAfter.toFlowable());
-                                }
+                return throwableFlowable.flatMap(throwable -> {
+                    if (mRetryOnError.isRetry(throwable)) {
+                        //重试，最多重试retryCount次
+                        if (currentRetry < mRetryCount) {
+                            currentRetry++;
+                            //尝试自动登陆
+                            if (mRetryAfter == null) {
+                                return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            } else {
+                                return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> mRetryAfter.toFlowable());
                             }
                         }
-                        return Flowable.error(throwable);
                     }
+                    return Flowable.error(throwable);
                 });
             }
         };
@@ -70,23 +67,20 @@ class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
         return new Function<Observable<Throwable>, ObservableSource<?>>() {
             @Override
             public ObservableSource<?> apply(Observable<Throwable> throwableObservable) throws Exception {
-                return throwableObservable.flatMap(new Function<Throwable, ObservableSource<?>>() {
-                    @Override
-                    public ObservableSource<?> apply(Throwable throwable) throws Exception {
-                        if (mRetryOnError.isRetry(throwable)) {
-                            //重试，最多重试retryCount次
-                            if (currentRetry < mRetryCount) {
-                                currentRetry++;
-                                //尝试自动登陆
-                                if (mRetryAfter == null) {
-                                    return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
-                                } else {
-                                    return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> mRetryAfter.toObservable());
-                                }
+                return throwableObservable.flatMap(throwable -> {
+                    if (mRetryOnError.isRetry(throwable)) {
+                        //重试，最多重试retryCount次
+                        if (currentRetry < mRetryCount) {
+                            currentRetry++;
+                            //尝试自动登陆
+                            if (mRetryAfter == null) {
+                                return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            } else {
+                                return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> mRetryAfter.toObservable());
                             }
                         }
-                        return Observable.error(throwable);
                     }
+                    return Observable.error(throwable);
                 });
             }
         };

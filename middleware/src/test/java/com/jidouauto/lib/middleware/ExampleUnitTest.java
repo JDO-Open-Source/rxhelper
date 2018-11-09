@@ -2,12 +2,16 @@ package com.jidouauto.lib.middleware;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import io.reactivex.Maybe;
 import io.reactivex.MaybeEmitter;
 import io.reactivex.MaybeOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.*;
 
@@ -37,6 +41,25 @@ public class ExampleUnitTest {
                 .subscribe(o -> {
                     System.out.println("ExampleUnitTest.testMaybe:" + o);
                 }, e -> e.printStackTrace(), () -> System.out.println("ExampleUnitTest.testMaybe.success"));
+    }
+
+
+
+    @Test
+    public void testUsingTestObserver() {
+        List<String> WORDS = Arrays.asList(new String[]{"A","B","C"});
+        TestObserver<String> observer = new TestObserver<>();
+        Observable<String> observable = Observable.fromIterable(WORDS)
+                .zipWith(Observable.range(1, Integer.MAX_VALUE),
+                        (string, index) -> String.format("%2d. %s", index, string));
+
+        observable.subscribe(observer);
+
+        observer.awaitTerminalEvent();
+
+        observer.assertComplete();
+        observer.assertNoErrors();
+        observer.assertValueCount(3);
     }
 
     @Test

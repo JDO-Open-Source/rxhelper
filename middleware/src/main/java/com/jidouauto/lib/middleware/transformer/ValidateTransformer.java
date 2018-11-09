@@ -16,7 +16,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
 
-class ValidateTransformer<T extends Validator> implements ObservableTransformer<T, T>,
+class ValidateTransformer<T extends Validator<? extends Exception>> implements ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T> {

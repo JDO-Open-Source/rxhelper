@@ -1,11 +1,11 @@
 package com.jidouauto.eddie.mvpdemo.helper;
 
 import com.google.gson.JsonParseException;
+import com.jidouauto.eddie.mvpdemo.exception.BaseException;
+import com.jidouauto.eddie.mvpdemo.exception.DataException;
+import com.jidouauto.eddie.mvpdemo.exception.NetworkException;
+import com.jidouauto.eddie.mvpdemo.exception.UnknowException;
 import com.jidouauto.lib.middleware.ErrorConverter;
-import com.jidouauto.lib.middleware.exception.BaseException;
-import com.jidouauto.lib.middleware.exception.DataException;
-import com.jidouauto.lib.middleware.exception.NetworkException;
-import com.jidouauto.lib.middleware.exception.UnknowException;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -14,7 +14,7 @@ import java.net.UnknownHostException;
 
 import retrofit2.HttpException;
 
-public class BasicErrorConverter implements ErrorConverter {
+public class BasicErrorConverter implements ErrorConverter<BaseException> {
 
     public static final ErrorConverter INSTANCE = new BasicErrorConverter();
 

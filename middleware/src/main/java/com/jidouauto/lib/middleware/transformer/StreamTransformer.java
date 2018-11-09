@@ -1,27 +1,18 @@
 package com.jidouauto.lib.middleware.transformer;
 
-import android.util.Log;
-
 import com.jidouauto.lib.middleware.DataConverter;
 import com.jidouauto.lib.middleware.ErrorConverter;
-import com.jidouauto.lib.middleware.IdentityValidator;
 import com.jidouauto.lib.middleware.NullableData;
 import com.jidouauto.lib.middleware.RetryOnError;
 import com.jidouauto.lib.middleware.Validator;
 
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.functions.Function;
 
 /**
  * @author eddie
  * <p>
- * 利用Rxjava2 Transformer接口，配合{@link DataConverter},{@link IdentityValidator},{@link Validator}
+ * 利用Rxjava2 Transformer接口，配合{@link DataConverter},{@link Validator}
  * 来规范数据处理，进行数据校验，身份校验（Token），错误处理以及失败重试等操作
  */
 public class StreamTransformer {
@@ -37,22 +28,12 @@ public class StreamTransformer {
     }
 
     /**
-     * 校验身份错误信息
-     *
-     * @param <T> 支持身份校验的数据模型必须实现IdentityValidator接口
-     * @return observable transformer
-     */
-    public static <T extends IdentityValidator> ObservableTransformer<T, T> validateIdentity() {
-        return new IdentityTransformer<>();
-    }
-
-    /**
      * 校验数据错误信息
      *
      * @param <T> 支持数据校验的数据模型必须实现DataValidator接口
      * @return observable transformer
      */
-    public static <T extends Validator> ValidateTransformer<T> validate() {
+    public static <T extends Validator<? extends Exception>> ValidateTransformer<T> validate() {
         return new ValidateTransformer<>();
     }
 
@@ -112,7 +93,7 @@ public class StreamTransformer {
      * @return observable transformer
      */
     public static <T> RetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, Single<?> retryAfter) {
-        return new RetryWhenTransformer<>(retryOnError,retryCount,delayMillisecond,retryAfter);
+        return new RetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond, retryAfter);
     }
 
     /**

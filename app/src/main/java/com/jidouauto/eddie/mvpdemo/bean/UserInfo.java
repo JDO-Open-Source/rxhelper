@@ -1,9 +1,9 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
+import com.jidouauto.eddie.mvpdemo.exception.DataException;
 import com.jidouauto.lib.base.utils.StringUtils;
 import com.jidouauto.lib.middleware.Validator;
-import com.jidouauto.lib.middleware.exception.BaseException;
-import com.jidouauto.lib.middleware.exception.DataException;
+import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 
 public class UserInfo implements Validator {
     private String username;

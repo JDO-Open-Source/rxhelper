@@ -1,9 +1,10 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
-import com.jidouauto.lib.middleware.exception.IdentityException;
-import com.jidouauto.lib.middleware.IdentityValidator;
+import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
+import com.jidouauto.lib.middleware.Validator;
+import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 
-public class CodeResp implements IdentityValidator {
+public class CodeResp implements Validator<BaseException> {
     public static final int SUCCEED = 1;
     public static final int TOKEN_EXPIRE = 999;
 
@@ -18,7 +19,7 @@ public class CodeResp implements IdentityValidator {
     }
 
     @Override
-    public void validateIdentity() throws IdentityException {
+    public void validate() throws BaseException {
         if (getCode() == TOKEN_EXPIRE) {
             throw new IdentityException(getCode(), "token expire!");
         }

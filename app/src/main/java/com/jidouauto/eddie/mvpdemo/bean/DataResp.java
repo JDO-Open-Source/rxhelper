@@ -1,8 +1,8 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
+import com.jidouauto.eddie.mvpdemo.exception.BaseException;
+import com.jidouauto.eddie.mvpdemo.exception.DataException;
 import com.jidouauto.lib.middleware.DataConverter;
-import com.jidouauto.lib.middleware.exception.BaseException;
-import com.jidouauto.lib.middleware.exception.DataException;
 
 public class DataResp<T> extends MsgResp implements DataConverter<T> {
 

@@ -1,7 +1,7 @@
 package com.jidouauto.eddie.mvpdemo.helper;
 
 import com.jidouauto.eddie.mvpdemo.exception.MsgException;
-import com.jidouauto.lib.middleware.exception.NetworkException;
+import com.jidouauto.eddie.mvpdemo.exception.NetworkException;
 
 public class ErrorHandler {
 
