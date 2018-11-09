@@ -1,7 +1,7 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
-import com.jidouauto.lib.middleware.DataConverter;
-import com.jidouauto.lib.middleware.NullableData;
+import com.jidouauto.lib.rxhelper.DataConverter;
+import com.jidouauto.lib.rxhelper.NullableData;
 
 public class NullableDataResp<T> extends MsgResp implements DataConverter<NullableData<T>> {
 

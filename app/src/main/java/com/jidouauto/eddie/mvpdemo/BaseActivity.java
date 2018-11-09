@@ -9,7 +9,7 @@ import com.jidouauto.eddie.mvpdemo.helper.LifecycleEventSource;
 import com.jidouauto.eddie.mvpdemo.helper.LoadingView;
 import com.jidouauto.eddie.mvpdemo.helper.ProgressLoadingView;
 import com.jidouauto.eddie.mvpdemo.helper.ToastErrorView;
-import com.jidouauto.lib.middleware.LifecycleSource;
+import com.jidouauto.lib.rxhelper.LifecycleSource;
 
 import io.reactivex.Observable;
 

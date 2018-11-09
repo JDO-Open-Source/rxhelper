@@ -1,7 +1,7 @@
 package com.jidouauto.eddie.mvpdemo;
 
-import com.jidouauto.lib.middleware.LifecycleSource;
-import com.jidouauto.lib.middleware.transformer.LifecycleTransformer;
+import com.jidouauto.lib.rxhelper.LifecycleSource;
+import com.jidouauto.lib.rxhelper.transformer.LifecycleTransformer;
 
 /**
  * @author eddie

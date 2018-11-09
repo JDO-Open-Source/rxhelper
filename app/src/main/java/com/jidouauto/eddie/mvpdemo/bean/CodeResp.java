@@ -1,7 +1,7 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
 import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
-import com.jidouauto.lib.middleware.Validator;
+import com.jidouauto.lib.rxhelper.Validator;
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 
 public class CodeResp implements Validator<BaseException> {

@@ -6,7 +6,7 @@ import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.OnLifecycleEvent;
 
 import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
-import com.jidouauto.lib.middleware.LifecycleSource;
+import com.jidouauto.lib.rxhelper.LifecycleSource;
 
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;

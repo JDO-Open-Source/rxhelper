@@ -1,8 +1,8 @@
 package com.jidouauto.eddie.mvpdemo;
 
 import com.jidouauto.lib.base.utils.LogUtils;
-import com.jidouauto.lib.middleware.LifecycleSource;
-import com.jidouauto.lib.middleware.transformer.LifecycleTransformer;
+import com.jidouauto.lib.rxhelper.LifecycleSource;
+import com.jidouauto.lib.rxhelper.transformer.LifecycleTransformer;
 
 public class BasePresenter implements IBasePresenter {
 

@@ -5,7 +5,7 @@ import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
 import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
 import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
-import com.jidouauto.lib.middleware.transformer.Transformers;
+import com.jidouauto.lib.rxhelper.transformer.Transformers;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;

@@ -5,7 +5,7 @@ import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 import com.jidouauto.eddie.mvpdemo.exception.DataException;
 import com.jidouauto.eddie.mvpdemo.exception.NetworkException;
 import com.jidouauto.eddie.mvpdemo.exception.UnknowException;
-import com.jidouauto.lib.middleware.ErrorConverter;
+import com.jidouauto.lib.rxhelper.ErrorConverter;
 
 import java.io.IOException;
 import java.net.ConnectException;

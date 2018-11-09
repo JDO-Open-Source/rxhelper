@@ -2,7 +2,7 @@ package com.jidouauto.eddie.mvpdemo.bean;
 
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 import com.jidouauto.eddie.mvpdemo.exception.DataException;
-import com.jidouauto.lib.middleware.Validator;
+import com.jidouauto.lib.rxhelper.Validator;
 
 public class LoginInfo implements Validator {
     private String username;
