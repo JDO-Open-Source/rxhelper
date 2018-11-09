@@ -49,6 +49,7 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
 
                     @Override
                     public void onError(Throwable e) {
+                        e.printStackTrace();
                         mUserView.endGetUserInfo();
                         mUserView.onGetUserInfoFailed(e);
                     }
@@ -80,6 +81,7 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
 
                     @Override
                     public void onError(Throwable e) {
+                        e.printStackTrace();
                         mUserView.endGetUserAvatar();
                         mUserView.getUserAvatarError(e);
                     }

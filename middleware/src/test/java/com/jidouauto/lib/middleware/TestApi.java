@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import okhttp3.RequestBody;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -21,7 +22,7 @@ public interface TestApi {
      * @return the observable
      */
     @GET("/")
-    Observable<String> home();
+    Single<String> home();
 
     /**
      * Fetch nearby park list observable.
@@ -30,5 +31,5 @@ public interface TestApi {
      * @return the observable
      */
     @POST("park/listinfo")
-    Observable<String> fetchNearbyParkList(@Body HashMap<String,Object> params);
+    Single<String> fetchNearbyParkList(@Body HashMap<String,Object> params);
 }

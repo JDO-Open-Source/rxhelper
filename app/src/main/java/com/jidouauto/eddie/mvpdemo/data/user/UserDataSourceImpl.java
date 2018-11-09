@@ -12,7 +12,6 @@ import java.util.UUID;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.SingleSource;
 
 public class UserDataSourceImpl implements UserDataSource {
     private static final String TAG = "UserDataSourceImpl";
@@ -100,7 +99,7 @@ public class UserDataSourceImpl implements UserDataSource {
         return Single.create(emitter -> {
             new Thread(() -> {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -128,10 +127,20 @@ public class UserDataSourceImpl implements UserDataSource {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        String avatar = null;
-
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         NullableDataResp<String> resp = new NullableDataResp<>();
-                        resp.setData(avatar);
+                        if (!serverToken.equals(token)) {
+                            resp.setCode(999);
+                            resp.setMessage("Token expire!");
+                        } else {
+                            String avatar = null;
+                            resp.setCode(1);
+                            resp.setData(avatar);
+                        }
                         emitter.onSuccess(resp);
                     }
                 }).start();

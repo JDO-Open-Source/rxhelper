@@ -64,11 +64,13 @@ public class UserActivity extends BaseActivity implements UserContract.IUserView
     @Override
     public void onUserAvatar(String avatar) {
         //设置用户头像
+        Toast.makeText(this, "获取头像成功:" + avatar, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void getUserAvatarError(Throwable e) {
         //加载头像出错处理
+        getErrorHandler().handError(e,getString(R.string.get_avatar_failed));
     }
 
     @Override
@@ -80,5 +82,9 @@ public class UserActivity extends BaseActivity implements UserContract.IUserView
     public void finish(){
         super.finish();
         getLoadingView().cancelAll();
+    }
+
+    public void getUserAvatar(View view) {
+        userPresenter.getUserAvatar();
     }
 }
