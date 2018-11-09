@@ -1,12 +1,14 @@
 package com.jidouauto.lib.middleware;
 
+import com.jidouauto.lib.middleware.transformer.Transformers;
+
 import io.reactivex.SingleSource;
 
 /**
  * @author eddie
  * <p>
  * 根据错误类型判断是否应该重试
- * @see {@link com.jidouauto.lib.middleware.transformer.StreamTransformer#retryWhenError(RetryOnError, int, long, SingleSource)}
+ * @see {@link Transformers#retryWhenError(RetryOnError, int, long, SingleSource)}
  */
 public interface RetryOnError {
     /**

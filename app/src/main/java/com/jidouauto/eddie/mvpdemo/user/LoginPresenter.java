@@ -5,7 +5,7 @@ import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
 import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
 import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
-import com.jidouauto.lib.middleware.transformer.StreamTransformer;
+import com.jidouauto.lib.middleware.transformer.Transformers;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
@@ -24,12 +24,12 @@ public class LoginPresenter extends BasePresenter implements UserContract.ILogin
     @Override
     public void login(String username, String password) {
         mUserDataSource.login(username, password)
-                .compose(StreamTransformer.validate())              //校验后端返回数据正确性
-                .compose(StreamTransformer.convertToData())         //数据转换
-                .compose(StreamTransformer.validate())              //校验转换后的数据的合法性
-                .compose(StreamTransformer.retryAnyError(1, 20)) //重试机制
-                .compose(StreamTransformer.convertError(BasicErrorConverter.INSTANCE))         //将错误类型转换为可知的错误类型便于前台处理
-                .compose(StreamTransformer.applyIOUI())               //线程切换模式
+                .compose(Transformers.validate())              //校验后端返回数据正确性
+                .compose(Transformers.convertToData())         //数据转换
+                .compose(Transformers.validate())              //校验转换后的数据的合法性
+                .compose(Transformers.retryAnyError(1, 20)) //重试机制
+                .compose(Transformers.convertError(BasicErrorConverter.INSTANCE))         //将错误类型转换为可知的错误类型便于前台处理
+                .compose(Transformers.applyIOUI())               //线程切换模式
                 .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))   //ON_DESTROY事件的时候取消订阅事件
                 .doOnSubscribe(disposable1 -> {
                     mLoginView.startLogin();

@@ -12,5 +12,8 @@ import io.reactivex.Observable;
  */
 public interface LifecycleSource<T> {
 
+    /**
+     * @return 一个观察生命周期的Observable
+     */
     Observable<T> getLifecycleObservable();
 }

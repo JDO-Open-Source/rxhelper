@@ -15,7 +15,7 @@ import io.reactivex.Single;
  * 利用Rxjava2 Transformer接口，配合{@link DataConverter},{@link Validator}
  * 来规范数据处理，进行数据校验，身份校验（Token），错误处理以及失败重试等操作
  */
-public class StreamTransformer {
+public class Transformers {
 
     /**
      * 经典的IO-UI的线程切换模型

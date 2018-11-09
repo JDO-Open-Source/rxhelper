@@ -1,25 +1,20 @@
 package com.jidouauto.lib.middleware;
 
-import com.jidouauto.lib.middleware.transformer.StreamTransformer;
+import com.jidouauto.lib.middleware.transformer.Transformers;
 
-import org.junit.Assert;
 import org.junit.Before;
 
 import java.net.ConnectException;
-import java.util.concurrent.Future;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.android.plugins.RxAndroidPlugins;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observers.TestObserver;
-import io.reactivex.plugins.RxJavaPlugins;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * The type Stream transformer test.
  */
-public class StreamTransformerTest {
+public class TransformersTest {
 
     /**
      * The Code.
@@ -77,15 +72,15 @@ public class StreamTransformerTest {
                 .map(i -> {
                     if (error) {
                         error = false;
-                        System.out.println("StreamTransformerTest.refreshToken:net error" + newToken);
+                        System.out.println("TransformersTest.refreshToken:net error" + newToken);
                         throw new ConnectException("can not connect server!");
                     } else {
-                        System.out.println("StreamTransformerTest.refreshToken:ok");
+                        System.out.println("TransformersTest.refreshToken:ok");
                         return i;
                     }
                 })
                 .map(i -> code = newToken)
-                .compose(StreamTransformer.retryAnyError(3, 0));
+                .compose(Transformers.retryAnyError(3, 0));
 
     }
 
@@ -95,7 +90,7 @@ public class StreamTransformerTest {
      * @return the token
      */
     public int getToken() {
-        System.out.println("StreamTransformerTest.getToken:" + code);
+        System.out.println("TransformersTest.getToken:" + code);
         return code;
     }
 
@@ -124,10 +119,10 @@ public class StreamTransformerTest {
         //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
         TestObserver<String> testObserver = new TestObserver<>();
         Observable.fromCallable(() -> new Test(getToken()))
-                .compose(StreamTransformer.validate())       //验证数据正确性
-                .compose(StreamTransformer.convertToData())           //数据转换
-                .compose(StreamTransformer.retryWhenError(IdentityException.class, 3, 200, refreshToken(1)))
-                .compose(StreamTransformer.retryExceptError(3, 0, IdentityException.class))
+                .compose(Transformers.validate())       //验证数据正确性
+                .compose(Transformers.convertToData())           //数据转换
+                .compose(Transformers.retryWhenError(IdentityException.class, 3, 200, refreshToken(1)))
+                .compose(Transformers.retryExceptError(3, 0, IdentityException.class))
                 .subscribe(testObserver);
         testObserver.awaitTerminalEvent();
         testObserver.assertValue("TEST");
@@ -170,9 +165,9 @@ public class StreamTransformerTest {
         TestObserver testObserver = new TestObserver();
 
         Observable.just(result)
-                .compose(StreamTransformer.validate())
-                .compose(StreamTransformer.convertToData())
-                .compose(StreamTransformer.validateNullable())
+                .compose(Transformers.validate())
+                .compose(Transformers.convertToData())
+                .compose(Transformers.validateNullable())
                 .subscribe(testObserver);
 
         testObserver.assertError(DataException.class);
@@ -182,9 +177,9 @@ public class StreamTransformerTest {
         TestObserver testObserver2 = new TestObserver();
 
         Observable.just(result)
-                .compose(StreamTransformer.validate())
-                .compose(StreamTransformer.convertToData())
-                .compose(StreamTransformer.validateNullable())
+                .compose(Transformers.validate())
+                .compose(Transformers.convertToData())
+                .compose(Transformers.validateNullable())
                 .subscribe(testObserver2);
 
         testObserver2.assertValueCount(1);
@@ -194,9 +189,9 @@ public class StreamTransformerTest {
         TestObserver testObserver3 = new TestObserver();
 
         Observable.just(result)
-                .compose(StreamTransformer.validate())
-                .compose(StreamTransformer.convertToData())
-                .compose(StreamTransformer.validateNullable())
+                .compose(Transformers.validate())
+                .compose(Transformers.convertToData())
+                .compose(Transformers.validateNullable())
                 .subscribe(testObserver3);
 
         testObserver3.assertValueCount(1);

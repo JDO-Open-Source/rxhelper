@@ -1,15 +1,15 @@
 package com.jidouauto.lib.middleware;
 
 
-import com.jidouauto.lib.middleware.transformer.StreamTransformer;
+import com.jidouauto.lib.middleware.transformer.Transformers;
 
 /**
  * The interface Result validator.
  *
  * @author eddie
  * <p>
- * ResultValidator接口用于数据结果的校验 该接口配合{@link StreamTransformer#validate()} ()} 实现数据结果校验，并将错误信息反馈到调用者
- * @see {@link StreamTransformer} eg. 请求返回的错误code 数据异常。
+ * ResultValidator接口用于数据结果的校验 该接口配合{@link Transformers#validate()} ()} 实现数据结果校验，并将错误信息反馈到调用者
+ * @see {@link Transformers} eg. 请求返回的错误code 数据异常。
  */
 public interface Validator<T extends Exception> {
 

@@ -7,10 +7,10 @@ package com.jidouauto.lib.middleware;
  */
 public interface ErrorConverter<T extends Throwable> {
     /**
-     * Convert base exception.
+     * 对Throwable进行转换
      *
-     * @param e the e
-     * @return the base exception
+     * @param e 需要转换的异常
+     * @return 转换后的异常
      */
     T convert(Throwable e);
 }

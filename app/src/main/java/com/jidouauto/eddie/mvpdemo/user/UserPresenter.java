@@ -6,7 +6,7 @@ import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
 import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
 import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
-import com.jidouauto.lib.middleware.transformer.StreamTransformer;
+import com.jidouauto.lib.middleware.transformer.Transformers;
 
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
@@ -28,13 +28,13 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
         Single
                 .fromCallable(() -> mUserDataSource.getLocalToken())
                 .flatMap(token -> mUserDataSource.getUserInfo(token))
-                .compose(StreamTransformer.validate())             //校验后端返回数据正确性
-                .compose(StreamTransformer.convertToData())        //数据转换
-                .compose(StreamTransformer.validate())             //校验转换后的数据的合法性
-                .compose(StreamTransformer.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
-                .compose(StreamTransformer.convertError(BasicErrorConverter.INSTANCE))
+                .compose(Transformers.validate())             //校验后端返回数据正确性
+                .compose(Transformers.convertToData())        //数据转换
+                .compose(Transformers.validate())             //校验转换后的数据的合法性
+                .compose(Transformers.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
+                .compose(Transformers.convertError(BasicErrorConverter.INSTANCE))
                 .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))
-                .compose(StreamTransformer.applyIOUI())
+                .compose(Transformers.applyIOUI())
                 .subscribe(new SingleObserver<UserInfo>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -60,12 +60,12 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
         Single
                 .fromCallable(() -> mUserDataSource.getLocalToken())
                 .flatMap(token -> mUserDataSource.getUserAvatar(token))
-                .compose(StreamTransformer.validate())
-                .compose(StreamTransformer.convertToData("https://xxxxxx.xxx.xxx/user/default.png"))    //如果服务端的头像地址数据为空，则使用默认的头像
-                .compose(StreamTransformer.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
-                .compose(StreamTransformer.convertError(BasicErrorConverter.INSTANCE))
+                .compose(Transformers.validate())
+                .compose(Transformers.convertToData("https://xxxxxx.xxx.xxx/user/default.png"))    //如果服务端的头像地址数据为空，则使用默认的头像
+                .compose(Transformers.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
+                .compose(Transformers.convertError(BasicErrorConverter.INSTANCE))
                 .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))
-                .compose(StreamTransformer.applyIOUI())
+                .compose(Transformers.applyIOUI())
                 .subscribe(new SingleObserver<String>() {
                     @Override
                     public void onSubscribe(Disposable d) {
