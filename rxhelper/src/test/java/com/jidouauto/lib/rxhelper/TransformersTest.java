@@ -5,8 +5,10 @@ import com.jidouauto.lib.rxhelper.transformer.Transformers;
 import org.junit.Before;
 
 import java.net.ConnectException;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observers.TestObserver;
@@ -118,7 +120,7 @@ public class TransformersTest {
     public void testTransformer() throws Exception {
         //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
         TestObserver<String> testObserver = new TestObserver<>();
-        Observable.fromCallable(() -> new Test(getToken()))
+        Observable.defer((Callable<ObservableSource<Test>>) () -> Observable.just(new Test(getToken())))
                 .compose(Transformers.validate())       //验证数据正确性
                 .compose(Transformers.convertToData())           //数据转换
                 .compose(Transformers.retryWhenError(IdentityException.class, 3, 200, refreshToken(1)))
