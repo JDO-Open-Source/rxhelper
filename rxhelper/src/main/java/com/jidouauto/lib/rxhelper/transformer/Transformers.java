@@ -118,12 +118,25 @@ public class Transformers {
      * @return observable transformer
      */
     public static <T> RetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
+        return retryOnError(retryCount,delayMillisecond,null,errorClasses);
+    }
+
+    /**
+     * 出现指定类型的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param errorClasses     如果错误类型包含在errorClasses才重试
+     * @return observable transformer
+     */
+    public static <T> RetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Single<?> retryAfter, Class<? extends Throwable>... errorClasses) {
         return retryWhenError(throwable -> {
             if (errorClasses == null) {
                 return false;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return true;
                     }
                 }
@@ -148,7 +161,7 @@ public class Transformers {
                 return true;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return false;
                     }
                 }

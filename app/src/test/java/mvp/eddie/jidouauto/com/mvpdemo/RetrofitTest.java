@@ -10,6 +10,8 @@ import java.util.HashMap;
 import io.reactivex.observers.TestObserver;
 import okhttp3.logging.HttpLoggingInterceptor;
 
+import static com.jidouauto.eddie.mvpdemo.api.ApiService.API;
+
 /**
  * The type Retrofit test.
  */
@@ -21,36 +23,15 @@ public class RetrofitTest {
     @Test
     public void testHttp() {
 
-        RetrofitClient retrofitClient = new RetrofitClient("http://www.baidu.com", HttpLoggingInterceptor.Level.BODY);
-
         TestObserver<String> testObserver = new TestObserver<>();
-
-        retrofitClient
-                .create(TestApi.class)
-                .home()
-                .subscribe(testObserver);
-
+        API.home().subscribe(testObserver);
         testObserver.assertValueCount(1);
+
+        TestObserver<String> testObserver2 = new TestObserver<>();
+        API.home().subscribe(testObserver2);
+
+        testObserver2.assertValueCount(1);
     }
-
-    /**
-     * Test https.
-     */
-    @Test
-    public void testHttps() {
-
-        RetrofitClient retrofitClient = new RetrofitClient("https://www.baidu.com", HttpLoggingInterceptor.Level.BODY);
-
-        TestObserver<String> testObserver = new TestObserver<>();
-
-        retrofitClient
-                .create(TestApi.class)
-                .home()
-                .subscribe(testObserver);
-
-        testObserver.assertValueCount(1);
-    }
-
     /**
      * Test post.
      */
