@@ -20,8 +20,10 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
 import io.reactivex.functions.Function;
+import io.reactivex.internal.operators.single.SingleToFlowable;
+import io.reactivex.internal.operators.single.SingleToObservable;
 
-class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
+class SingleRetryWhenTransformer<T> implements ObservableTransformer<T, T>,
         FlowableTransformer<T, T>,
         SingleTransformer<T, T>,
         MaybeTransformer<T, T> {
@@ -29,13 +31,15 @@ class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
     private RetryOnError mRetryOnError;
     private long mDelayMillisecond;
     private int mRetryCount;
+    private SingleSource<?> mRetryAfter;
     int currentRetry;
 
-    public RetryWhenTransformer(RetryOnError retryOnError, int retryCount, long delayMillisecond) {
-        Log.d("SingleRetryWhenTransformer", "SingleRetryWhenTransformer: ");
+    public SingleRetryWhenTransformer(RetryOnError retryOnError, int retryCount, long delayMillisecond, SingleSource<?> retryAfter) {
+        Log.d("SingleRetryWhenTransformer", "SingleRetryWhenTransformer: " + retryAfter);
         mRetryOnError = retryOnError;
         mRetryCount = retryCount;
         mDelayMillisecond = delayMillisecond;
+        mRetryAfter = retryAfter;
     }
 
     public Function<Flowable<Throwable>, Publisher<?>> retryFlowableFunction() {
@@ -48,7 +52,11 @@ class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
                         if (currentRetry < mRetryCount) {
                             currentRetry++;
                             //尝试自动登陆
-                            return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            if (mRetryAfter == null) {
+                                return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            } else {
+                                return Flowable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> new SingleToFlowable<>(mRetryAfter));
+                            }
                         }
                     }
                     return Flowable.error(throwable);
@@ -67,7 +75,11 @@ class RetryWhenTransformer<T> implements ObservableTransformer<T, T>,
                         if (currentRetry < mRetryCount) {
                             currentRetry++;
                             //尝试自动登陆
-                            return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            if (mRetryAfter == null) {
+                                return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS);
+                            } else {
+                                return Observable.timer(mDelayMillisecond, TimeUnit.MILLISECONDS).flatMap(i -> new SingleToObservable<>(mRetryAfter));
+                            }
                         }
                     }
                     return Observable.error(throwable);

@@ -6,8 +6,12 @@ import com.jidouauto.lib.rxhelper.NullableData;
 import com.jidouauto.lib.rxhelper.RetryOnError;
 import com.jidouauto.lib.rxhelper.Validator;
 
+import org.reactivestreams.Publisher;
+
+import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 /**
  * @author eddie
@@ -89,12 +93,54 @@ public class Transformers {
      * @param retryOnError     判断是否重试
      * @param retryCount       重试次数
      * @param delayMillisecond 重试延迟时间
+     * @return observable transformer
+     */
+    public static <T> RetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond) {
+        return new RetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond);
+    }
+
+    /**
+     * 通过RetryOnError接口来决定是否重试
+     *
+     * @param <T>              the type parameter
+     * @param retryOnError     判断是否重试
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试延迟时间
      * @param retryAfter       重试前执行的操作
      * @return observable transformer
      */
-    public static <T> RetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, Single<?> retryAfter) {
-        return new RetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond, retryAfter);
+    public static <T> SingleRetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, SingleSource<?> retryAfter) {
+        return new SingleRetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond, retryAfter);
     }
+
+    /**
+     * 通过RetryOnError接口来决定是否重试
+     *
+     * @param <T>              the type parameter
+     * @param retryOnError     判断是否重试
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试延迟时间
+     * @param retryAfter       重试前执行的操作
+     * @return observable transformer
+     */
+    public static <T> PublisherRetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, Publisher<?> retryAfter) {
+        return new PublisherRetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 通过RetryOnError接口来决定是否重试
+     *
+     * @param <T>              the type parameter
+     * @param retryOnError     判断是否重试
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试延迟时间
+     * @param retryAfter       重试前执行的操作
+     * @return observable transformer
+     */
+    public static <T> ObservableRetryWhenTransformer<T> retryWhenError(RetryOnError retryOnError, final int retryCount, final long delayMillisecond, ObservableSource<?> retryAfter) {
+        return new ObservableRetryWhenTransformer<>(retryOnError, retryCount, delayMillisecond, retryAfter);
+    }
+
 
     /**
      * 出现任何错误都重试
@@ -105,7 +151,46 @@ public class Transformers {
      * @return observable transformer
      */
     public static <T> RetryWhenTransformer<T> retryAnyError(final int retryCount, long delayMillisecond) {
-        return retryWhenError(throwable -> true, retryCount, delayMillisecond, null);
+        return retryWhenError(throwable -> true, retryCount, delayMillisecond);
+    }
+
+    /**
+     * 出现任何错误都重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试延迟
+     * @param retryAfter       重试前执行的操作
+     * @return observable transformer
+     */
+    public static <T> SingleRetryWhenTransformer<T> retryAnyError(final int retryCount, long delayMillisecond, SingleSource<?> retryAfter) {
+        return new SingleRetryWhenTransformer<>(throwable -> true, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现任何错误都重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试延迟
+     * @param retryAfter       重试前执行的操作
+     * @return observable transformer
+     */
+    public static <T> PublisherRetryWhenTransformer<T> retryAnyError(final int retryCount, long delayMillisecond, Publisher<?> retryAfter) {
+        return new PublisherRetryWhenTransformer<>(throwable -> true, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现任何错误都重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试延迟
+     * @param retryAfter       重试前执行的操作
+     * @return observable transformer
+     */
+    public static <T> ObservableRetryWhenTransformer<T> retryAnyError(final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter) {
+        return new ObservableRetryWhenTransformer<>(throwable -> true, retryCount, delayMillisecond, retryAfter);
     }
 
     /**
@@ -118,7 +203,7 @@ public class Transformers {
      * @return observable transformer
      */
     public static <T> RetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
-        return retryOnError(retryCount,delayMillisecond,null,errorClasses);
+        return retryOnError(retryCount,delayMillisecond,errorClasses);
     }
 
     /**
@@ -143,7 +228,85 @@ public class Transformers {
 
                 return false;
             }
-        }, retryCount, delayMillisecond, null);
+        }, retryCount, delayMillisecond);
+    }
+
+    /**
+     * 出现指定类型的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses才重试
+     * @return observable transformer
+     */
+    public static <T> SingleRetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, SingleSource<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return false;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现指定类型的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses才重试
+     * @return observable transformer
+     */
+    public static <T> PublisherRetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Publisher<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return false;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现指定类型的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses才重试
+     * @return observable transformer
+     */
+    public static <T> ObservableRetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return false;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
     }
 
     /**
@@ -168,9 +331,100 @@ public class Transformers {
 
                 return true;
             }
-        }, retryCount, delayMillisecond, null);
+        }, retryCount, delayMillisecond);
     }
 
+    /**
+     * 出现非指定的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses则不重试
+     * @return observable transformer
+     */
+    public static <T> SingleRetryWhenTransformer<T> retryExceptError(final int retryCount, long delayMillisecond, SingleSource<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return true;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现非指定的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses则不重试
+     * @return observable transformer
+     */
+    public static <T> PublisherRetryWhenTransformer<T> retryExceptError(final int retryCount, long delayMillisecond, Publisher<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return true;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 出现非指定的错误才重试
+     *
+     * @param <T>              the type parameter
+     * @param retryCount       重试次数
+     * @param delayMillisecond 重试前延迟
+     * @param retryAfter       重试前执行的操作
+     * @param errorClasses     如果错误类型包含在errorClasses则不重试
+     * @return observable transformer
+     */
+    public static <T> ObservableRetryWhenTransformer<T> retryExceptError(final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter, Class<? extends Throwable>... errorClasses) {
+        return retryWhenError(throwable -> {
+            if (errorClasses == null) {
+                return true;
+            } else {
+                for (Class<? extends Throwable> eClass : errorClasses) {
+                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }, retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 针对某个错误重试，并且每次重试都在执行完retryAfter之后
+     *
+     * @param <T>              the type parameter
+     * @param errorType        错误类型
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试前延迟
+     * @return observable transformer
+     * @deprecated use {@link Transformers#retryOnError(int, long, SingleSource, Class[])}
+     */
+    public static <T> RetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond) {
+        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond);
+    }
 
     /**
      * 针对某个错误重试，并且每次重试都在执行完retryAfter之后
@@ -181,8 +435,39 @@ public class Transformers {
      * @param delayMillisecond 每次重试前延迟
      * @param retryAfter       重试前执行的逻辑
      * @return observable transformer
+     * @deprecated use {@link Transformers#retryOnError(int, long, SingleSource, Class[])}
      */
-    public static <T> RetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, Single<?> retryAfter) {
+    public static <T> SingleRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, SingleSource<?> retryAfter) {
+        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 针对某个错误重试，并且每次重试都在执行完retryAfter之后
+     *
+     * @param <T>              the type parameter
+     * @param errorType        错误类型
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试前延迟
+     * @param retryAfter       重试前执行的逻辑
+     * @return observable transformer
+     * @deprecated use {@link Transformers#retryOnError(int, long, Publisher, Class[])}
+     */
+    public static <T> PublisherRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, Publisher<?> retryAfter) {
+        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
+    }
+
+    /**
+     * 针对某个错误重试，并且每次重试都在执行完retryAfter之后
+     *
+     * @param <T>              the type parameter
+     * @param errorType        错误类型
+     * @param retryCount       重试次数
+     * @param delayMillisecond 每次重试前延迟
+     * @param retryAfter       重试前执行的逻辑
+     * @return observable transformer
+     * @deprecated use {@link Transformers#retryOnError(int, long, ObservableSource, Class[])}
+     */
+    public static <T> ObservableRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter) {
         return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
     }
 }

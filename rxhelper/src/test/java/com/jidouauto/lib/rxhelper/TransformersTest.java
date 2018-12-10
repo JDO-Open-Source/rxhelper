@@ -123,7 +123,7 @@ public class TransformersTest {
         Observable.defer((Callable<ObservableSource<Test>>) () -> Observable.just(new Test(getToken())))
                 .compose(Transformers.validate())       //验证数据正确性
                 .compose(Transformers.convertToData())           //数据转换
-                .compose(Transformers.retryWhenError(IdentityException.class, 3, 200, refreshToken(1)))
+                .compose(Transformers.retryOnError(3, 200, refreshToken(1), IdentityException.class))
                 .compose(Transformers.retryExceptError(3, 0, IdentityException.class))
                 .subscribe(testObserver);
         testObserver.awaitTerminalEvent();
