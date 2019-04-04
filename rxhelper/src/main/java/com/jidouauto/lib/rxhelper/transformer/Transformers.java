@@ -203,7 +203,7 @@ public class Transformers {
      * @return observable transformer
      */
     public static <T> RetryWhenTransformer<T> retryOnError(final int retryCount, long delayMillisecond, Class<? extends Throwable>... errorClasses) {
-        return retryOnError(retryCount,delayMillisecond,errorClasses);
+        return retryOnError(retryCount, delayMillisecond, errorClasses);
     }
 
     /**
@@ -247,7 +247,7 @@ public class Transformers {
                 return false;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return true;
                     }
                 }
@@ -273,7 +273,7 @@ public class Transformers {
                 return false;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return true;
                     }
                 }
@@ -299,7 +299,7 @@ public class Transformers {
                 return false;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return true;
                     }
                 }
@@ -350,7 +350,7 @@ public class Transformers {
                 return true;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return false;
                     }
                 }
@@ -376,7 +376,7 @@ public class Transformers {
                 return true;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return false;
                     }
                 }
@@ -402,7 +402,7 @@ public class Transformers {
                 return true;
             } else {
                 for (Class<? extends Throwable> eClass : errorClasses) {
-                    if (throwable.getClass().isAssignableFrom(eClass)) {
+                    if (eClass.isAssignableFrom(throwable.getClass())) {
                         return false;
                     }
                 }
@@ -423,7 +423,7 @@ public class Transformers {
      * @deprecated use {@link Transformers#retryOnError(int, long, SingleSource, Class[])}
      */
     public static <T> RetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond) {
-        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond);
+        return retryWhenError(throwable -> (errorType.isAssignableFrom(throwable.getClass())), retryCount, delayMillisecond);
     }
 
     /**
@@ -438,7 +438,7 @@ public class Transformers {
      * @deprecated use {@link Transformers#retryOnError(int, long, SingleSource, Class[])}
      */
     public static <T> SingleRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, SingleSource<?> retryAfter) {
-        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
+        return retryWhenError(throwable -> (errorType.isAssignableFrom(throwable.getClass())), retryCount, delayMillisecond, retryAfter);
     }
 
     /**
@@ -453,7 +453,7 @@ public class Transformers {
      * @deprecated use {@link Transformers#retryOnError(int, long, Publisher, Class[])}
      */
     public static <T> PublisherRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, Publisher<?> retryAfter) {
-        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
+        return retryWhenError(throwable -> (errorType.isAssignableFrom(throwable.getClass())), retryCount, delayMillisecond, retryAfter);
     }
 
     /**
@@ -468,6 +468,6 @@ public class Transformers {
      * @deprecated use {@link Transformers#retryOnError(int, long, ObservableSource, Class[])}
      */
     public static <T> ObservableRetryWhenTransformer<T> retryWhenError(Class<? extends Throwable> errorType, final int retryCount, long delayMillisecond, ObservableSource<?> retryAfter) {
-        return retryWhenError(throwable -> (throwable.getClass().isAssignableFrom(errorType)), retryCount, delayMillisecond, retryAfter);
+        return retryWhenError(throwable -> (errorType.isAssignableFrom(throwable.getClass())), retryCount, delayMillisecond, retryAfter);
     }
 }
