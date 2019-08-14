@@ -4,11 +4,9 @@ import com.jidouauto.lib.rxhelper.ext.ObservableFirstSingle;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.reactivestreams.Publisher;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
@@ -21,15 +19,13 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.android.plugins.RxAndroidPlugins;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -116,8 +112,6 @@ public class ExampleUnitTest {
         RxJavaPlugins.setIoSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
         RxJavaPlugins.setNewThreadSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
         RxJavaPlugins.setSingleSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
-        RxAndroidPlugins.reset();
-        RxAndroidPlugins.setMainThreadSchedulerHandler(scheduler -> Schedulers.trampoline());
     }
 
     @Test

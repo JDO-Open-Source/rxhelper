@@ -6,6 +6,7 @@ import org.junit.Before;
 
 import java.net.ConnectException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -38,7 +39,7 @@ public class TransformersTest {
          * @param token the token
          */
         public Test(int token) {
-            System.out.println("Test.Test");
+            System.out.println("Test.Test : " + token);
             mToken = token;
         }
 
@@ -61,7 +62,7 @@ public class TransformersTest {
      * The Error.
      */
 //模拟第一次从服务端刷新token失败，但第二次正常的逻辑
-    boolean error = false;
+    boolean error = true;
 
     /**
      * Refresh token observable.
@@ -72,8 +73,26 @@ public class TransformersTest {
     public Single<Integer> refreshToken(int newToken) {
         return Single.just(newToken)
                 .map(i -> {
+                    System.out.println("TransformersTest : map");
                     if (error) {
+                        System.out.println("TransformersTest : map : error");
                         error = false;
+                        System.out.println("TransformersTest.refreshToken:net error" + newToken);
+                        throw new ConnectException("can not connect server!");
+                    } else {
+                        System.out.println("TransformersTest.refreshToken:ok");
+                        return i;
+                    }
+                })
+                .map(i -> code = newToken)
+                .compose(Transformers.retryAnyError(3, 0));
+
+    }
+
+    public Single<Integer> refreshToken2(int newToken) {
+        return Single.just(newToken)
+                .map(i -> {
+                    if (error) {
                         System.out.println("TransformersTest.refreshToken:net error" + newToken);
                         throw new ConnectException("can not connect server!");
                     } else {
@@ -203,5 +222,32 @@ public class TransformersTest {
                 return o instanceof NullableData && ((NullableData<User>) o).isNull();
             }
         });
+    }
+
+    @org.junit.Test
+    public void testRetryUntil() {
+        //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
+        TestObserver<String> testObserver = new TestObserver<>();
+        long time = System.currentTimeMillis();
+        Observable.defer(() -> Observable.just(new Test(getToken())))
+                .compose(Transformers.validate())       //验证数据正确性
+                .compose(Transformers.convertToData())           //数据转换
+                .compose(Transformers.retryOnError(1, 0, Observable.timer(3000, TimeUnit.MILLISECONDS), refreshToken(1).delay(3000, TimeUnit.MILLISECONDS).toObservable(), IdentityException.class))
+                .subscribe(testObserver);
+        testObserver.awaitTerminalEvent();
+        System.out.println("" + (System.currentTimeMillis() - time));
+        testObserver.assertError(IdentityException.class);
+
+        //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
+        TestObserver<String> testObserver2 = new TestObserver<>();
+        long time2 = System.currentTimeMillis();
+        Observable.defer(() -> Observable.just(new Test(getToken())))
+                .compose(Transformers.validate())       //验证数据正确性
+                .compose(Transformers.convertToData())           //数据转换
+                .compose(Transformers.retryOnError(1, 0, Observable.timer(4000, TimeUnit.MILLISECONDS), refreshToken(1).delay(3000, TimeUnit.MILLISECONDS).toObservable(), IdentityException.class))
+                .subscribe(testObserver2);
+        testObserver2.awaitTerminalEvent();
+        System.out.println("" + (System.currentTimeMillis() - time2));
+        testObserver2.assertValue("TEST");
     }
 }

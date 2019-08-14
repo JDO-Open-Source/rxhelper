@@ -1,84 +1,43 @@
-apply plugin: 'com.android.library'
-
+apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
+sourceCompatibility = "8"
+targetCompatibility = "8"
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 /**
  * 请求重试
- * Token失效验证
  * 数据校验
  * 异常信息处理
  * 生命周期绑定
- * Activity管理
- * Retrofit Client封装
  */
-android {
 
-    //2. setup uploadArchives
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                //url
-                repository(url:'http://192.168.2.199:8081/artifactory/gradle-release'){
-                    authentication(userName : MAVENUSER, password : MAVENPASSWORD)
-                }
+//2. setup uploadArchives
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //url
+            repository(url: 'http://192.168.2.199:8081/artifactory/gradle-release') {
+                authentication(userName: MAVENUSER, password: MAVENPASSWORD)
+            }
 
-                pom.project {
-                    groupId 'com.jidouauto.lib'
-                    artifactId 'rxhelper'
-                    version "1.0.3"
-                    packaging 'aar'
-                }
+            pom.project {
+                groupId 'com.jidouauto.lib'
+                artifactId 'rxhelper'
+                version "1.1.0"
+                packaging 'jar'
             }
         }
     }
-
-    compileSdkVersion 28
-
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
 }
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
-    //gson
-    api 'com.google.code.gson:gson:2.8.4'
-
-    // http
-    api 'com.squareup.retrofit2:retrofit:2.4.0'
-    api 'com.squareup.retrofit2:converter-scalars:2.4.0'
-    api 'com.squareup.retrofit2:converter-gson:2.4.0'
-    api 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
-    api 'com.squareup.okhttp3:logging-interceptor:3.11.0'
-    // async
-    api 'io.reactivex.rxjava2:rxjava:2.2.2'
-    api 'io.reactivex.rxjava2:rxandroid:2.1.0'
-
-    //glide
-//    api 'com.github.bumptech.glide:glide:4.8.0'
-//    annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.2'
 }
