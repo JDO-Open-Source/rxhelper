@@ -1,6 +1,6 @@
 package com.jidouauto.lib.rxhelper;
 
-import com.jidouauto.lib.rxhelper.transformer.Transformers;
+import com.jidouauto.lib.rxhelper.transformer.RetryTransformers;
 
 import io.reactivex.SingleSource;
 
@@ -8,7 +8,7 @@ import io.reactivex.SingleSource;
  * @author eddie
  * <p>
  * 根据错误类型判断是否应该重试
- * @see {@link Transformers#retryWhenError(RetryOnError, int, long, SingleSource)}
+ * @see {@link RetryTransformers#retryWhenError(RetryOnError, int, long, SingleSource)}
  */
 public interface RetryOnError {
     /**

@@ -24,6 +24,15 @@ public class ToastErrorView implements ErrorView {
     }
 
     @Override
+    public void onTokenExpired() {
+        if (null != toast) {
+            toast.cancel();
+        }
+        toast = Toast.makeText(mContext, mContext.getString(R.string.identity_error), Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    @Override
     public void onMessageError(String message) {
         if (null != toast) {
             toast.cancel();

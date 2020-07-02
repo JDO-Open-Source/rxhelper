@@ -1,18 +1,17 @@
 package com.jidouauto.eddie.mvpdemo.helper;
 
-import com.google.gson.JsonParseException;
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 import com.jidouauto.eddie.mvpdemo.exception.DataException;
 import com.jidouauto.eddie.mvpdemo.exception.NetworkException;
 import com.jidouauto.eddie.mvpdemo.exception.UnknowException;
 import com.jidouauto.lib.rxhelper.ErrorConverter;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-
-import retrofit2.HttpException;
 
 public class BasicErrorConverter implements ErrorConverter<BaseException> {
 
@@ -29,11 +28,10 @@ public class BasicErrorConverter implements ErrorConverter<BaseException> {
         if (e instanceof UnknownHostException
                 || e instanceof ConnectException
                 || e instanceof SocketTimeoutException
-                || e instanceof HttpException
                 || e instanceof IOException) {
-            return new NetworkException(-1, e);
-        } else if (e instanceof JsonParseException) {
-            return new DataException(-1, e);
+            return new NetworkException(-1, "网络错误", e);
+        } else if (e instanceof JSONException) {
+            return new DataException(-1, "数据异常", e);
         } else if (e instanceof BaseException) {
             return (BaseException) e;
         } else {

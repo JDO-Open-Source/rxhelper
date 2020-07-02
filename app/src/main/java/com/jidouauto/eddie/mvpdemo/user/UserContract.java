@@ -9,11 +9,13 @@ public class UserContract {
     public interface ILoginView extends IBaseView<UserContract.ILoginPresenter> {
         void startLogin();                          //开始登陆
 
-        void endLogin();                          //登陆结束
+        void endLogin();                            //登陆结束
 
         void loginSucceed(LoginInfo info);          //登陆成功
 
-        void loginError(Throwable e);              //发生错误
+        void loginError(Throwable e);               //发生错误
+
+        void showRetryStatus(String status);        //显示重试信息
     }
 
     public interface ILoginPresenter extends IBasePresenter {
@@ -29,18 +31,10 @@ public class UserContract {
 
         void onUserInfo(UserInfo userInfo);
 
-        void startGetUserAvatar();
-
-        void onUserAvatar(String avatar);
-
-        void getUserAvatarError(Throwable e);
-
-        void endGetUserAvatar();
+        void showRetryStatus(String status);
     }
 
     public interface IUserPresenter extends IBasePresenter {
         void getUserInfo();
-
-        void getUserAvatar();
     }
 }

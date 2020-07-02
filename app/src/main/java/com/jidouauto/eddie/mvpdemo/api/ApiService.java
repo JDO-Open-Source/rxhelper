@@ -1,28 +1,16 @@
 package com.jidouauto.eddie.mvpdemo.api;
 
-import com.jidouauto.eddie.mvpdemo.network.RetrofitClient;
+import com.jidouauto.eddie.mvpdemo.bean.DataResp;
+import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
+import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
+import io.reactivex.Single;
 
-public class ApiService {
+public interface ApiService {
 
-    public static final String BASE_URL = "http://www.baidu.com";
+    Single<DataResp<LoginInfo>> login(String userName, String password);
 
-    public static RetrofitClient retrofitClient = new RetrofitClient(BASE_URL, HttpLoggingInterceptor.Level.BODY);
+    Single<DataResp<LoginInfo>> autoLogin(String token);
 
-    public static final Api API = create();
-
-
-    public static <T> T create(Retrofit retrofit, final Class<T> service) {
-        return retrofit.create(service);
-    }
-
-    public static <T> T create(final Class<T> service) {
-        return retrofitClient.getRetrofit().create(service);
-    }
-
-    public static Api create() {
-        return create(retrofitClient.getRetrofit(), Api.class);
-    }
+    Single<DataResp<UserInfo>> getUserInfo(String token);
 }

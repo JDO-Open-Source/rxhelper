@@ -1,7 +1,7 @@
 package com.jidouauto.eddie.mvpdemo.bean;
 
 import com.jidouauto.eddie.mvpdemo.exception.DataException;
-import com.jidouauto.lib.base.utils.StringUtils;
+import com.jidouauto.eddie.mvpdemo.utils.StringUtils;
 import com.jidouauto.lib.rxhelper.Validator;
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 

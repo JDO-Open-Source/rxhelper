@@ -15,7 +15,6 @@ import io.reactivex.Observable;
 
 public class BaseActivity extends AppCompatActivity implements LifecycleSource<LifecycleEvent> {
     protected ErrorHandler errorHandler;
-    protected LoadingView loadingView;
     protected LifecycleSource lifecycleSource;
 
     @Override
@@ -27,15 +26,10 @@ public class BaseActivity extends AppCompatActivity implements LifecycleSource<L
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         errorHandler = new ErrorHandler(new ToastErrorView(this));
-        loadingView = new ProgressLoadingView(this);
         lifecycleSource = new LifecycleEventSource(getLifecycle());
     }
 
     protected ErrorHandler getErrorHandler() {
         return errorHandler;
-    }
-
-    protected LoadingView getLoadingView() {
-        return loadingView;
     }
 }

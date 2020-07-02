@@ -3,7 +3,7 @@ package com.jidouauto.eddie.mvpdemo.bean;
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 import com.jidouauto.eddie.mvpdemo.exception.DataException;
 import com.jidouauto.eddie.mvpdemo.exception.MsgException;
-import com.jidouauto.lib.base.utils.StringUtils;
+import com.jidouauto.eddie.mvpdemo.utils.StringUtils;
 
 public class MsgResp extends CodeResp {
     private String message;

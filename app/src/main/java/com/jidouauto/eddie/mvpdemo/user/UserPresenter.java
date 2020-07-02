@@ -4,12 +4,15 @@ import com.jidouauto.eddie.mvpdemo.BasePresenter;
 import com.jidouauto.eddie.mvpdemo.LifecycleEvent;
 import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 import com.jidouauto.eddie.mvpdemo.data.user.UserDataSource;
-import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
 import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
-import com.jidouauto.lib.rxhelper.transformer.Transformers;
+import com.jidouauto.eddie.mvpdemo.helper.BasicErrorConverter;
+import com.jidouauto.lib.rxhelper.backoff.FixedBackOffStrategy;
+import com.jidouauto.lib.rxhelper.transformer.ErrorTransformers;
+import com.jidouauto.lib.rxhelper.transformer.RetryListener;
+import com.jidouauto.lib.rxhelper.transformer.RetryTransformers;
 
-import io.reactivex.Single;
 import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
 public class UserPresenter extends BasePresenter implements UserContract.IUserPresenter {
@@ -25,16 +28,32 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
 
     @Override
     public void getUserInfo() {
-        Single
-                .fromCallable(() -> mUserDataSource.getLocalToken())
-                .flatMap(token -> mUserDataSource.getUserInfo(token))
-                .compose(Transformers.validate())             //校验后端返回数据正确性
-                .compose(Transformers.convertToData())        //数据转换
-                .compose(Transformers.validate())             //校验转换后的数据的合法性
-                .compose(Transformers.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
-                .compose(Transformers.convertError(BasicErrorConverter.INSTANCE))
+        mUserDataSource.getUserInfo()
+                .compose(ErrorTransformers.convertError(BasicErrorConverter.INSTANCE))
+                .compose(RetryTransformers.retryOnError(1, new FixedBackOffStrategy(1000), null, mUserDataSource.autoLogin().toObservable(), new RetryListener() {
+                    @Override
+                    public void scheduleRetry(Throwable retryError, int retryCount, long delay) {
+                        mUserView.showRetryStatus("Token失效，计划" + delay + "ms后进行第" + retryCount + "次重试");
+                    }
+
+                    @Override
+                    public void startRetry(Throwable retryError, int retryCount) {
+                        mUserView.showRetryStatus("Token失效，" + "开始第" + retryCount + "次重试");
+                    }
+                }, IdentityException.class))
+                .compose(RetryTransformers.retryExceptError(5, new FixedBackOffStrategy(1000), null, null, new RetryListener() {
+                    @Override
+                    public void scheduleRetry(Throwable retryError, int retryCount, long delay) {
+                        mUserView.showRetryStatus(retryError.getMessage() + "，计划" + delay + "ms后进行第" + retryCount + "次重试");
+                    }
+
+                    @Override
+                    public void startRetry(Throwable retryError, int retryCount) {
+                        mUserView.showRetryStatus(retryError.getMessage() + "开始第" + retryCount + "次重试");
+                    }
+                }, IdentityException.class))
                 .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))
-                .compose(Transformers.applyIOUI())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleObserver<UserInfo>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -54,38 +73,5 @@ public class UserPresenter extends BasePresenter implements UserContract.IUserPr
                         mUserView.onGetUserInfoFailed(e);
                     }
                 });
-    }
-
-    @Override
-    public void getUserAvatar() {
-        Single
-                .fromCallable(() -> mUserDataSource.getLocalToken())
-                .flatMap(token -> mUserDataSource.getUserAvatar(token))
-                .compose(Transformers.validate())
-                .compose(Transformers.convertToData("https://xxxxxx.xxx.xxx/user/default.png"))    //如果服务端的头像地址数据为空，则使用默认的头像
-                .compose(Transformers.retryWhenError(IdentityException.class, 1, 0, mUserDataSource.getToken()))
-                .compose(Transformers.convertError(BasicErrorConverter.INSTANCE))
-                .compose(bindUntilEvent(LifecycleEvent.ON_DESTROY))
-                .compose(Transformers.applyIOUI())
-                .subscribe(new SingleObserver<String>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        mUserView.startGetUserAvatar();
-                    }
-
-                    @Override
-                    public void onSuccess(String avatar) {
-                        mUserView.endGetUserAvatar();
-                        mUserView.onUserAvatar(avatar);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                        mUserView.endGetUserAvatar();
-                        mUserView.getUserAvatarError(e);
-                    }
-                });
-
     }
 }

@@ -1,6 +1,9 @@
 package com.jidouauto.lib.rxhelper;
 
-import com.jidouauto.lib.rxhelper.transformer.Transformers;
+import com.jidouauto.lib.rxhelper.backoff.FixedBackOffStrategy;
+import com.jidouauto.lib.rxhelper.transformer.DataTransformers;
+import com.jidouauto.lib.rxhelper.transformer.RetryTransformers;
+import com.jidouauto.lib.rxhelper.transformer.ValidateTransformers;
 
 import org.junit.Before;
 
@@ -20,102 +23,6 @@ import io.reactivex.observers.TestObserver;
 public class TransformersTest {
 
     /**
-     * The Code.
-     */
-    int code = 9;
-
-    /**
-     * The type Test result.
-     */
-    public class Test implements DataConverter<String>, Validator<BaseException> {
-        /**
-         * The M token.
-         */
-        int mToken;
-
-        /**
-         * Instantiates a new Test result.
-         *
-         * @param token the token
-         */
-        public Test(int token) {
-            System.out.println("Test.Test : " + token);
-            mToken = token;
-        }
-
-        @Override
-        public String convert() {
-            return "TEST";
-        }
-
-        @Override
-        public void validate() throws BaseException {
-            System.out.println("Test.validateData");
-            if (mToken == 9) {
-                System.out.println("Test.validateIdentity token 错误");
-                throw new IdentityException("token 错误");
-            }
-        }
-    }
-
-    /**
-     * The Error.
-     */
-//模拟第一次从服务端刷新token失败，但第二次正常的逻辑
-    boolean error = true;
-
-    /**
-     * Refresh token observable.
-     *
-     * @param newToken the new token
-     * @return the observable
-     */
-    public Single<Integer> refreshToken(int newToken) {
-        return Single.just(newToken)
-                .map(i -> {
-                    System.out.println("TransformersTest : map");
-                    if (error) {
-                        System.out.println("TransformersTest : map : error");
-                        error = false;
-                        System.out.println("TransformersTest.refreshToken:net error" + newToken);
-                        throw new ConnectException("can not connect server!");
-                    } else {
-                        System.out.println("TransformersTest.refreshToken:ok");
-                        return i;
-                    }
-                })
-                .map(i -> code = newToken)
-                .compose(Transformers.retryAnyError(3, 0));
-
-    }
-
-    public Single<Integer> refreshToken2(int newToken) {
-        return Single.just(newToken)
-                .map(i -> {
-                    if (error) {
-                        System.out.println("TransformersTest.refreshToken:net error" + newToken);
-                        throw new ConnectException("can not connect server!");
-                    } else {
-                        System.out.println("TransformersTest.refreshToken:ok");
-                        return i;
-                    }
-                })
-                .map(i -> code = newToken)
-                .compose(Transformers.retryAnyError(3, 0));
-
-    }
-
-    /**
-     * Gets token.
-     *
-     * @return the token
-     */
-    public int getToken() {
-        System.out.println("TransformersTest.getToken:" + code);
-        return code;
-    }
-
-    /**
      * 把异步变成同步，方便测试
      */
     @Before
@@ -130,6 +37,62 @@ public class TransformersTest {
 //        RxAndroidPlugins.setMainThreadSchedulerHandler(scheduler -> Schedulers.trampoline());
     }
 
+    class NetworkException extends Exception {
+
+    }
+
+    class NetworkStatus {
+
+        boolean networkConnected;
+
+        void connect() {
+            networkConnected = true;
+        }
+
+        void disconnect() {
+            networkConnected = false;
+        }
+
+    }
+
+    final String result = "hello,i'm from server!";
+
+    class Api {
+        NetworkStatus networkStatus;
+
+        public Api(NetworkStatus networkStatus) {
+            this.networkStatus = networkStatus;
+        }
+
+        String requestData() throws NetworkException {
+            System.out.println("=====>start request data!");
+            if (networkStatus.networkConnected) {
+                System.out.println("<=====request data succeed:" + result);
+                return result;
+            } else {
+                System.out.println("<=====request data failed:NetworkException\n");
+                throw new NetworkException();
+            }
+        }
+
+    }
+
+    private Observable fixNetwork(NetworkStatus networkStatus, long delay) {
+        return Observable.timer(delay, TimeUnit.MILLISECONDS)
+                .doOnNext(i -> networkStatus.connect());
+    }
+
+
+    private Observable requestData(Api api) {
+        return Observable
+                .fromCallable(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return api.requestData();
+                    }
+                });
+    }
+
     /**
      * Test transformer.
      *
@@ -137,17 +100,56 @@ public class TransformersTest {
      */
     @org.junit.Test
     public void testTransformer() throws Exception {
-        //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
-        TestObserver<String> testObserver = new TestObserver<>();
-        Observable.defer((Callable<ObservableSource<Test>>) () -> Observable.just(new Test(getToken())))
-                .compose(Transformers.validate())       //验证数据正确性
-                .compose(Transformers.convertToData())           //数据转换
-                .compose(Transformers.retryOnError(3, 200, refreshToken(1), IdentityException.class))
-                .compose(Transformers.retryExceptError(3, 0, IdentityException.class))
-                .subscribe(testObserver);
-        testObserver.awaitTerminalEvent();
-        testObserver.assertValue("TEST");
-//        Assert.assertEquals("TEST", result.get());
+        NetworkStatus networkStatus = new NetworkStatus();
+        Api api = new Api(networkStatus);
+
+        System.out.println("start case1 : no retry");
+        networkStatus.disconnect();
+        TestObserver<String> testObserver1 = new TestObserver<>();
+        requestData(api).subscribe(testObserver1);
+        testObserver1.awaitTerminalEvent();
+        testObserver1.assertError(NetworkException.class);
+        System.out.println("case1 : NetworkException\n\n");
+
+        System.out.println("start case2 : retry but only delay 100ms");
+        networkStatus.disconnect();
+        TestObserver<String> testObserver2 = new TestObserver<>();
+        requestData(api)
+                .compose(RetryTransformers.retryOnError(3, 100, NetworkException.class))
+                .subscribe(testObserver2);
+        testObserver2.awaitTerminalEvent();
+        testObserver2.assertError(NetworkException.class);
+        System.out.println("case2 : retry failed,still NetworkException\n\n");
+
+        System.out.println("start case3 : retry,delay 100ms,fixNetwork");
+        networkStatus.disconnect();
+        TestObserver<String> testObserver3 = new TestObserver<>();
+        requestData(api)
+                .compose(RetryTransformers.retryOnError(3, 100, fixNetwork(networkStatus, 0), NetworkException.class))
+                .subscribe(testObserver3);
+        testObserver3.awaitTerminalEvent();
+        testObserver3.assertValue(result);
+        System.out.println("case3 : retry succeed\n\n");
+
+        System.out.println("start case4 : retry,delay 100ms,fixNetwork,limit total retry time 80ms");
+        networkStatus.disconnect();
+        TestObserver<String> testObserver4 = new TestObserver<>();
+        requestData(api)
+                .compose(RetryTransformers.retryOnError(3, new FixedBackOffStrategy(100), Observable.timer(80, TimeUnit.MILLISECONDS), fixNetwork(networkStatus, 0), null, NetworkException.class))
+                .subscribe(testObserver4);
+        testObserver4.awaitTerminalEvent();
+        testObserver4.assertError(NetworkException.class);
+        System.out.println("case4 : retry failed\n\n");
+
+        System.out.println("start case5 : retry,delay 100ms,fixNetwork,limit total retry time 110ms");
+        networkStatus.disconnect();
+        TestObserver<String> testObserver5 = new TestObserver<>();
+        requestData(api)
+                .compose(RetryTransformers.retryOnError(3, new FixedBackOffStrategy(100), Observable.timer(110, TimeUnit.MILLISECONDS), fixNetwork(networkStatus, 0), null, NetworkException.class))
+                .subscribe(testObserver5);
+        testObserver5.awaitTerminalEvent();
+        testObserver5.assertValue(result);
+        System.out.println("case5 : retry succeed\n\n");
     }
 
     class User implements Validator {
@@ -186,9 +188,9 @@ public class TransformersTest {
         TestObserver testObserver = new TestObserver();
 
         Observable.just(result)
-                .compose(Transformers.validate())
-                .compose(Transformers.convertToData())
-                .compose(Transformers.validateNullable())
+                .compose(ValidateTransformers.validate())
+                .compose(DataTransformers.convertToData())
+                .compose(ValidateTransformers.validateNullable())
                 .subscribe(testObserver);
 
         testObserver.assertError(DataException.class);
@@ -198,9 +200,9 @@ public class TransformersTest {
         TestObserver testObserver2 = new TestObserver();
 
         Observable.just(result)
-                .compose(Transformers.validate())
-                .compose(Transformers.convertToData())
-                .compose(Transformers.validateNullable())
+                .compose(ValidateTransformers.validate())
+                .compose(DataTransformers.convertToData())
+                .compose(ValidateTransformers.validateNullable())
                 .subscribe(testObserver2);
 
         testObserver2.assertValueCount(1);
@@ -210,9 +212,9 @@ public class TransformersTest {
         TestObserver testObserver3 = new TestObserver();
 
         Observable.just(result)
-                .compose(Transformers.validate())
-                .compose(Transformers.convertToData())
-                .compose(Transformers.validateNullable())
+                .compose(ValidateTransformers.validate())
+                .compose(DataTransformers.convertToData())
+                .compose(ValidateTransformers.validateNullable())
                 .subscribe(testObserver3);
 
         testObserver3.assertValueCount(1);
@@ -222,32 +224,5 @@ public class TransformersTest {
                 return o instanceof NullableData && ((NullableData<User>) o).isNull();
             }
         });
-    }
-
-    @org.junit.Test
-    public void testRetryUntil() {
-        //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
-        TestObserver<String> testObserver = new TestObserver<>();
-        long time = System.currentTimeMillis();
-        Observable.defer(() -> Observable.just(new Test(getToken())))
-                .compose(Transformers.validate())       //验证数据正确性
-                .compose(Transformers.convertToData())           //数据转换
-                .compose(Transformers.retryOnError(1, 0, Observable.timer(3000, TimeUnit.MILLISECONDS), refreshToken(1).delay(3000, TimeUnit.MILLISECONDS).toObservable(), IdentityException.class))
-                .subscribe(testObserver);
-        testObserver.awaitTerminalEvent();
-        System.out.println("" + (System.currentTimeMillis() - time));
-        testObserver.assertError(IdentityException.class);
-
-        //验证登录服务器token出错，并且尝试刷新token，同时刷新token时第一次出错第二次正常的情况
-        TestObserver<String> testObserver2 = new TestObserver<>();
-        long time2 = System.currentTimeMillis();
-        Observable.defer(() -> Observable.just(new Test(getToken())))
-                .compose(Transformers.validate())       //验证数据正确性
-                .compose(Transformers.convertToData())           //数据转换
-                .compose(Transformers.retryOnError(1, 0, Observable.timer(4000, TimeUnit.MILLISECONDS), refreshToken(1).delay(3000, TimeUnit.MILLISECONDS).toObservable(), IdentityException.class))
-                .subscribe(testObserver2);
-        testObserver2.awaitTerminalEvent();
-        System.out.println("" + (System.currentTimeMillis() - time2));
-        testObserver2.assertValue("TEST");
     }
 }

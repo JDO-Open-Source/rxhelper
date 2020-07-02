@@ -1,36 +1,38 @@
 package com.jidouauto.eddie.mvpdemo.data.user;
 
-import com.jidouauto.eddie.mvpdemo.bean.DataResp;
 import com.jidouauto.eddie.mvpdemo.bean.LoginInfo;
-import com.jidouauto.eddie.mvpdemo.bean.NullableDataResp;
 import com.jidouauto.eddie.mvpdemo.bean.UserInfo;
 
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 
 public interface UserDataSource {
-    Single<DataResp<LoginInfo>> login(String username, String password);
-
-    Single<DataResp<String>> getToken();
-
-    void expireToken();
-
     /**
-     * 获取用户信息
+     * 用户主动登录
      *
-     * @param token
+     * @param username
+     * @param password
      * @return
      */
-    Single<DataResp<UserInfo>> getUserInfo(String token);
+    Single<LoginInfo> login(String username, String password);
 
     /**
-     * 获取用户头像链接地址
-     * 获取到的头像链接可能为空
+     * 自动登录，token续期
      *
-     * @param token
      * @return
      */
-    Single<NullableDataResp<String>> getUserAvatar(String token);
+    Single<LoginInfo> autoLogin();
 
-    String getLocalToken();
+    /**
+     * 获取登录的信息，如果未登录则回调Error{@link com.jidouauto.eddie.mvpdemo.exception.UnLoginException}
+     *
+     * @return
+     */
+    Single<LoginInfo> getLoginInfo();
+
+    /**
+     * 请求用户的详细信息
+     *
+     * @return
+     */
+    Single<UserInfo> getUserInfo();
 }

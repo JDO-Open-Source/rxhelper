@@ -1,5 +1,6 @@
 package com.jidouauto.eddie.mvpdemo.helper;
 
+import com.jidouauto.eddie.mvpdemo.exception.IdentityException;
 import com.jidouauto.eddie.mvpdemo.exception.MsgException;
 import com.jidouauto.eddie.mvpdemo.exception.NetworkException;
 
@@ -22,6 +23,9 @@ public class ErrorHandler {
             return true;
         } else if (e instanceof NetworkException) {
             mMessageView.onNetworkError();
+            return true;
+        } else if (e instanceof IdentityException) {
+            mMessageView.onTokenExpired();
             return true;
         }
         if (logicErrorMsg != null) {

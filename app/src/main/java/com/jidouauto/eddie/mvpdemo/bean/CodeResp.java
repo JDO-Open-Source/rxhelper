@@ -5,7 +5,7 @@ import com.jidouauto.lib.rxhelper.Validator;
 import com.jidouauto.eddie.mvpdemo.exception.BaseException;
 
 public class CodeResp implements Validator<BaseException> {
-    public static final int SUCCEED = 1;
+    public static final int SUCCEED = 0;
     public static final int TOKEN_EXPIRE = 999;
 
     private int code;

@@ -6,4 +6,6 @@ public interface ErrorView {
 
     void onMessageError(String message);
 
+    void onTokenExpired();
+
 }

@@ -24,14 +24,4 @@ public class BasePresenter implements IBasePresenter {
         return LifecycleTransformer.bindUntilEvent(mLifecycleSource.getLifecycleObservable(), events);
     }
 
-    @Override
-    public void subscribe() {
-
-    }
-
-    @Override
-    public void unsubscribe() {
-
-    }
-
 }

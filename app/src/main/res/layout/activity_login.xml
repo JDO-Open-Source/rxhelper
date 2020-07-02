@@ -11,6 +11,14 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="com.jidouauto.eddie.mvpdemo.user.LoginActivity">
 
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/switchNetwork"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:text="模拟网络开关" />
+
     <!-- Login progress -->
     <ProgressBar
         android:id="@+id/login_progress"

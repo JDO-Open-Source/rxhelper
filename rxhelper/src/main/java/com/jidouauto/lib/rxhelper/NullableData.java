@@ -1,14 +1,15 @@
 package com.jidouauto.lib.rxhelper;
 
-import com.jidouauto.lib.rxhelper.transformer.Transformers;
+import com.jidouauto.lib.rxhelper.transformer.DataTransformers;
+import com.jidouauto.lib.rxhelper.transformer.ValidateTransformers;
 
 /**
  * @param <T>
  * @author eddie
  * <p>
  * 可空对象包装类,解决Rxjava不能传递空对象的问题
- * @@see {@link Transformers#validateNullable()}
- * @see {@link Transformers#convertToData(Object)}
+ * @@see {@link ValidateTransformers#validateNullable()} ()}
+ * @see {@link DataTransformers#convertToData()} (Object)}
  */
 public final class NullableData<T> {
 
@@ -20,6 +21,7 @@ public final class NullableData<T> {
 
     /**
      * 包装一个可空的对象
+     *
      * @param value 可空对象
      * @param <T>   被包装的对象类型
      * @return 包装类
